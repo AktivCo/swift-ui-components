@@ -16,6 +16,8 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "rt-ui-components"),
+            name: "rt-ui-components",
+            resources: [.process("Resources")]
+        )
     ]
 )
