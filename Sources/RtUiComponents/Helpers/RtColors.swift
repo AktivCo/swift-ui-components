@@ -17,5 +17,8 @@ public extension Color {
         public static let rtColorsSystemBlue = Color(UIColor(named: "rtColorsSystemBlue", in: .module, compatibleWith: nil)!)
         public static let rtColorsSystemGreen = Color(UIColor(named: "rtColorsSystemGreen", in: .module, compatibleWith: nil)!)
         public static let rtColorsSystemRed = Color(UIColor(named: "rtColorsSystemRed", in: .module, compatibleWith: nil)!)
+        public static let rtSurfaceQuaternary = Color(UIColor(named: "rtSurfaceQuaternary", in: .module, compatibleWith: nil)!)
+        public static let rtSurfaceSecondary = Color(UIColor(named: "rtSurfaceSecondary", in: .module, compatibleWith: nil)!)
+        public static let rtShadow = Color(UIColor(named: "rtShadowColor", in: .module, compatibleWith: nil)!)
     }
 }

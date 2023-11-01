@@ -7,16 +7,16 @@ import PackageDescription
 let package = Package(
     name: "rt-ui-components",
     platforms: [
-        .iOS(.v13),
+        .iOS(.v16),
     ],
     products: [
         .library(
-            name: "rt-ui-components",
-            targets: ["rt-ui-components"]),
+            name: "RtUiComponents",
+            targets: ["RtUiComponents"]),
     ],
     targets: [
         .target(
-            name: "rt-ui-components",
+            name: "RtUiComponents",
             resources: [.process("Resources")]
         )
     ]
