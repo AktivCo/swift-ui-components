@@ -22,5 +22,8 @@ public extension Color {
         public static let rtShadow = Color(UIColor(named: "rtShadowColor", in: .module, compatibleWith: nil)!)
         public static let rtSurfaceTertiary = Color(UIColor(named: "rtSurfaceTertiary", in: .module, compatibleWith: nil)!)
         public static let rtOtherGrabber = Color(UIColor(named: "rtOtherGrabber", in: .module, compatibleWith: nil)!)
+        public static let rtColorsOnPrimary = Color(UIColor(named: "rtColorsOnPrimary", in: .module, compatibleWith: nil)!)
+        public static let rtLabelSecondary = Color(UIColor(named: "rtLabelSecondary", in: .module, compatibleWith: nil)!)
+        public static let rtLabelPrimary = Color(UIColor(named: "rtLabelPrimary", in: .module, compatibleWith: nil)!)
     }
 }
