@@ -1,6 +1,6 @@
 //
 //  RtColors.swift
-//  
+//
 //
 //  Created by Никита Девятых on 01.11.2023.
 //
