@@ -1,5 +1,12 @@
 stages:
+  - analyse
   - build
+  
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_PIPELINE_SOURCE == "push"'
+      when: never
+    - when: always
 
 build:
   stage: build
@@ -15,3 +22,12 @@ build:
                              -destination generic/platform=iOS \
                              -scmProvider system
 
+include:
+  - project: rutoken/dev/devops/checker/code-quality
+    ref: latest
+    file: /code-quality.yaml
+
+
+code-quality:
+  stage: analyse
+  extends: .code-quality

@@ -1,0 +1,53 @@
+vertical_whitespace:
+  max_empty_lines: 2
+
+line_length: 150
+
+opt_in_rules:
+  - sorted_imports
+  - empty_count
+
+disabled_rules:
+  - identifier_name
+  - trailing_newline
+  - function_body_length
+  - cyclomatic_complexity
+  - type_body_length
+  - file_length
+
+custom_rules:
+  two_lines_after_import:
+    included: ".*\\.swift"
+    regex: "(?<=import\\s)\\w+(\n){1,2}(?!import)\\w+"
+    message: "Use two blank lines to separate import from code."
+    severity: error
+  one_line_before_import:
+    included: ".*\\.swift"
+    regex: "((?<=\/\/(\n{3}|\n))import)"
+    message: "Use one blank line to separate file's header and import."
+    severity: error
+  one_line_before_testable:
+    included: ".*\\.swift"
+    regex: "(?<=import\\s)\\w+(\n{3}|\n)(?=(@testable))"
+    message: "Use one blank line to separate import and testable import."
+    severity: error
+  one_word_one_language:
+    included: ".*\\.swift"
+    regex: "([^\\\\][a-zA-Z]+[а-яА-Я]|[а-яА-Я]+[a-zA-Z])"
+    message: "Use characters from one language for one word."
+    severity: error
+  one_or_less_spaces_after_bracket:
+    included: ".*\\.swift"
+    regex: "(\\{  )"
+    message: "Use one space after bracket"
+    severity: error
+  one_space_after_equal_sign:
+    included: ".*\\.swift"
+    regex: "(\\=  )"
+    message: "Use one space after equal sign"
+    severity: error
+  whitespace_before_dot:
+    included: ".*\\.swift"
+    regex: "(\\w+(?<!case|return|let)\\s\\.)"
+    message: "Use no whitespaces around dots"
+    severity: error
