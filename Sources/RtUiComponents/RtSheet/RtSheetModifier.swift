@@ -8,32 +8,40 @@
 import SwiftUI
 
 
-public struct RtSheetModifier<V: View>: ViewModifier {
+private struct RtSheetModifier<V: View>: ViewModifier {
     @Environment(\.colorScheme) private var colorScheme
 
     @Binding var isPresented: Bool
     @State private var sheetOffset: CGFloat
     @State private var backgroundOpacity: CGFloat = 0
-    @State var content: AnyView? = nil
-    let viewBuilder: () -> V
+    @State var sheetContent: V?
+    @State var parentViewDisabled = false
+
+    @ViewBuilder private let contentBuilder: () -> V
 
     private let screenHeight: CGFloat = UIApplication.shared.screenSize.height
     private let showedOffset: CGFloat
     private var showedOpacity: CGFloat { colorScheme == .dark ? 0.6 : 0.2 }
+    private let delay = 0.5
+    private let animation: Animation
     private let size: RtSheetSize
+    private let isDraggable: Bool
     private let coordinateSpaceName = "RtSheetSpace"
 
-    private var closeCallback: () -> Void
+    private var onDismiss: () -> Void
 
-    public init(isPresented: Binding<Bool>, size: RtSheetSize,
-                @ViewBuilder viewBuilder: @escaping () -> V,
-                _ closeCallback: @escaping () -> Void) {
+    public init(isPresented: Binding<Bool>, size: RtSheetSize, isDraggable: Bool,
+                _ onDismiss: @escaping () -> Void = {},
+                @ViewBuilder content: @escaping () -> V) {
         self._isPresented = isPresented
         self.size = size
+        self.isDraggable = isDraggable
         self._sheetOffset = State(initialValue: screenHeight)
         self.showedOffset = (screenHeight - size.height) / (UIDevice.current.userInterfaceIdiom == .pad ? 2 : 1)
-        self.viewBuilder = viewBuilder
-        self.closeCallback = closeCallback
+        self.animation = Animation.easeInOut(duration: delay)
+
+        self.contentBuilder = content
+        self.onDismiss = onDismiss
     }
 
     private var indicator: some View {
@@ -53,37 +61,49 @@ public struct RtSheetModifier<V: View>: ViewModifier {
                 }
             }
             .onEnded {
-                if $0.translation.height > size.height / 3 {
+                if $0.translation.height > size.height / 2 {
                     isPresented = false
                 } else {
                     open()
                 }
             }
     }
-    
-    public func body(content: Content) -> some View {
+
+    @ViewBuilder
+    var sheetOverlay: some View {
+        VStack(spacing: 0) {
+            if isDraggable {
+                self.indicator
+                    .padding(.top, 6)
+                    .padding(.bottom, 3)
+            }
+            VStack(spacing: 0) {
+                sheetContent
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    func body(content: Content) -> some View {
         ZStack(alignment: .top) {
             content
+                .allowsHitTesting(!parentViewDisabled)
+
             Color.black.opacity(backgroundOpacity)
                 .onTapGesture {
-                    close()
+                    isPresented = false
                 }
-            ZStack(alignment: .top) {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.RtColors.rtSurfaceTertiary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                VStack(alignment: .center, spacing: 0) {
-                    self.indicator
-                        .padding(.top, 6)
-                        .padding(.bottom, 3)
-                    self.content
-                }
-            }
-            .frame(maxWidth: size.width, maxHeight: size.height)
-            .gesture(dragToCloseGesture)
-            .offset(y: sheetOffset)
-            .coordinateSpace(name: coordinateSpaceName)
+
+            sheetOverlay
+                .frame(maxWidth: size.width, maxHeight: size.height)
+                .background { Color.RtColors.rtSurfaceTertiary }
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .gesture(isDraggable ? dragToCloseGesture : nil)
+                .offset(y: sheetOffset)
         }
+        .ignoresSafeArea()
+        .coordinateSpace(name: coordinateSpaceName)
         .onChange(of: sheetOffset) { newValue in
             let percentage = 1 - (newValue - showedOffset) / (screenHeight - showedOffset)
             backgroundOpacity = showedOpacity * percentage
@@ -92,27 +112,34 @@ public struct RtSheetModifier<V: View>: ViewModifier {
             $0 ? open() : close()
         }
     }
-    
+
     private func open() {
-        content = AnyView(viewBuilder())
-        withAnimation(.interpolatingSpring(stiffness: 222, damping: 28)) {
-            sheetOffset = showedOffset
-            backgroundOpacity = showedOpacity
+        parentViewDisabled = true
+        sheetContent = contentBuilder()
+
+        Task {
+            withAnimation(animation) {
+                sheetOffset = showedOffset
+                backgroundOpacity = showedOpacity
+            }
         }
     }
-    
+
     private func close() {
-        withAnimation(.interpolatingSpring(stiffness: 222, damping: 28)) {
-            sheetOffset = screenHeight
-            backgroundOpacity = 0
+        Task {
+            withAnimation(animation) {
+                sheetOffset = screenHeight
+                backgroundOpacity = 0
+            }
         }
 
-        DispatchQueue.global().asyncAfter(deadline: .now() + 0.3) {
-            // This is needed to reset content after sheet is closed
-            content = nil
-            isPresented = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            sheetContent = nil
+            parentViewDisabled = false
+            isPresented  = false
         }
-        closeCallback()
+
+        onDismiss()
     }
 }
 
@@ -120,19 +147,19 @@ public extension View {
     func rtSheet<V: View>(
         isPresented: Binding<Bool>,
         size: RtSheetSize,
-        @ViewBuilder viewBuilder: @escaping () -> V,
-        _ closeCallback: @escaping () -> Void = {}
+        isDraggable: Bool = true,
+        _ onDismiss: @escaping () -> Void = {},
+        @ViewBuilder content: @escaping () -> V
     ) -> some View {
         modifier(
-            RtSheetModifier(isPresented: isPresented,
-                            size: size,
-                            viewBuilder: viewBuilder, closeCallback)
+            RtSheetModifier(isPresented: isPresented, size: size, isDraggable: isDraggable,
+                            onDismiss, content: content)
         )
     }
 }
 
-fileprivate struct AnotherView: View {
-    public var body: some View {
+private struct AnotherView: View {
+    var body: some View {
         VStack {
             Spacer()
             Text("Another view")
@@ -145,84 +172,78 @@ fileprivate struct AnotherView: View {
     }
 }
 
-fileprivate struct PinInputView: View {
+private struct PinInputView: View {
     @Binding var errorMessage: String
+    @State var text = "some text"
 
-    public var body: some View {
+    var body: some View {
         NavigationStack {
-            VStack {
-                Spacer()
-                NavigationLink(destination: {
-                    Text("This is screen number 1")
-                }) {
-                    Text("Go to screen 1")
+            ZStack(alignment: .top) {
+                Color.gray
+                    .ignoresSafeArea()
+                VStack {
+                    Spacer()
+                    NavigationLink(destination: { Text("This is screen number 1") }, label: { Text("Go to screen 1") })
+                    Spacer()
+                    NavigationLink(destination: { Text("This is screen number 2") }, label: {
+                        Text("Go to screen 2") })
+                    Spacer()
+                    Button(text) {
+                        text = "text has changed"
+                    }
+                    Spacer()
                 }
-                Spacer().frame(height: 50)
-                NavigationLink(destination: {
-                    Text("This is screen number 2")
-                }) {
-                    Text("Go to screen 2")
+                .frame(maxWidth: .infinity, maxHeight: 400)
+                .background {
+                    Color.red
                 }
-                Spacer().frame(height: 30)
-                TextField("pin", text: .constant(""))
-                    .textFieldStyle(.roundedBorder)
-                    .padding()
-                Spacer()
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background {
-                Color.red
             }
         }
-        .frame(maxHeight: 400)
     }
 }
 
-fileprivate struct RtSheetModifierView: View {
-    @State private var customIsPresented = false
-    @State private var systemIsPresented = false
+private struct RtSheetModifierView: View {
+    @State private var isPresented = false
     @State var text = "Some error"
-    var size: RtSheetSize
     @State var viewBuilder: any View = EmptyView()
+    var size: RtSheetSize
+    @State var isDraggable: Bool = false
 
     var body: some View {
         VStack {
+            Toggle("Toggle isDraggable", isOn: $isDraggable)
+                .frame(width: 150)
+
+            Spacer().frame(height: 50)
             Button("show PinInputView") {
                 viewBuilder = PinInputView(errorMessage: $text)
-                customIsPresented.toggle()
+                isPresented.toggle()
             }
             Spacer().frame(height: 50)
             Button("show another sheet") {
                 viewBuilder = AnotherView()
-                customIsPresented.toggle()
-            }
-            Spacer().frame(height: 50)
-            Button("show system sheet") {
-                viewBuilder = AnotherView()
-                systemIsPresented.toggle()
+                isPresented.toggle()
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background {
             Color.green
         }
-        .rtSheet(isPresented: $customIsPresented, size: size) {
+        .rtSheet(isPresented: $isPresented, size: size, isDraggable: isDraggable) {
             AnyView(viewBuilder)
         }
-        .sheet(isPresented: $systemIsPresented, content: {
-            AnotherView()
-        })
         .ignoresSafeArea()
     }
 }
 
 struct RtSheetModifier_Previews: PreviewProvider {
     static var previews: some View {
-        RtSheetModifierView(size: .large)
+        RtSheetModifierView(size: UIDevice.current.userInterfaceIdiom == .pad ? .ipad(width: 540, height: 720) : .largePhone)
             .previewDisplayName("Large")
-        RtSheetModifierView(size: .medium)
-            .previewDisplayName("Medium")
-        RtSheetModifierView(size: .small)
+        RtSheetModifierView(size: UIDevice.current.userInterfaceIdiom == .pad ? .ipad(width: 540, height: 720) : .smallPhone)
             .previewDisplayName("Small")
+        RtSheetModifierView(size: .ipad(width: 540, height: 720))
+            .previewDisplayName("Ipad")
+            .previewDevice(PreviewDevice(rawValue: "iPad 11-inch"))
     }
 }

@@ -57,7 +57,7 @@ struct RtTokenChoiceView: View {
         }
         .padding(.horizontal, 20)
         .frame(maxWidth: 540, maxHeight: .infinity, alignment: .top)
-        .background(Color.RtColors.rtSurfaceTertiary)
+        .background { Color.clear }
     }
 }
 

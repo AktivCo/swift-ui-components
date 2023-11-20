@@ -10,31 +10,27 @@ import UIKit
 
 
 public enum RtSheetSize {
-    case small
-    case medium
-    case large
+    case smallPhone
+    case largePhone
+    case ipad(width: CGFloat, height: CGFloat)
 
     var height: CGFloat {
-        if UIDevice.current.userInterfaceIdiom == .phone {
-            let screenHeight = UIApplication.shared.screenSize.height
-            switch self {
-            case .small:
-                return screenHeight * 0.5
-            case .medium:
-                return screenHeight * 0.75
-            case .large:
-                return screenHeight * 0.9
-            }
-        } else {
-            return 720.0
+        switch self {
+        case .smallPhone:
+            return 391
+        case .largePhone:
+            return 786
+        case .ipad(_, let height):
+            return height
         }
     }
 
     var width: CGFloat {
-        if UIDevice.current.userInterfaceIdiom == .phone {
+        switch self {
+        case .largePhone, .smallPhone:
             return .infinity
-        } else {
-            return 540.0
+        case .ipad(let width, _):
+            return width
         }
     }
 }

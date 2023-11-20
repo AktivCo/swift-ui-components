@@ -58,7 +58,7 @@ public struct RtPinInputView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 44)
-        .background { Color.RtColors.rtSurfaceTertiary }
+        .background { Color.clear }
         .ignoresSafeArea(.all)
     }
 }
