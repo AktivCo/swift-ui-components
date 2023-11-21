@@ -9,9 +9,13 @@ import SwiftUI
 
 
 struct RtTokenChoiceView: View {
-    let cards = RtTokenCard.allCases
+    private let onSelect: (RtTokenType) -> Void
 
-    private func choiceCard(for card: RtTokenCard) -> some View {
+    init(onSelect: @escaping (RtTokenType) -> Void) {
+        self.onSelect = onSelect
+    }
+
+    private func choiceCard(for card: RtTokenType) -> some View {
         let cornerRadius = 12.0
 
         return HStack {
@@ -33,37 +37,37 @@ struct RtTokenChoiceView: View {
                 .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
         }
         .frame(height: 128)
-        .frame(minWidth: 350, maxWidth: 388)
         .background(Color.RtColors.rtSurfaceQuaternary)
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
     }
 
     var body: some View {
-        VStack(alignment: .center, spacing: 0) {
-            HStack {
-                Text("Выберите Рутокен")
-                    .font(.largeTitle)
-                    .foregroundStyle(Color.RtColors.rtLabelPrimary)
-                    .bold()
-                Spacer()
-            }
-            .frame(minWidth: 350, maxWidth: 388)
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Выберите Рутокен")
+                .font(.largeTitle)
+                .foregroundStyle(Color.RtColors.rtLabelPrimary)
+                .bold()
+                .padding(.bottom, 24)
+
             VStack(spacing: 12) {
-                ForEach(cards, id: \.self) { card in
+                ForEach(RtTokenType.allCases, id: \.self) { card in
                     choiceCard(for: card)
+                        .onTapGesture {
+                            onSelect(card)
+                        }
                 }
             }
-            .padding(.top, 24)
         }
-        .padding(.horizontal, 20)
-        .frame(maxWidth: 540, maxHeight: .infinity, alignment: .top)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background { Color.clear }
     }
 }
 
 struct RtTokenChoiceView_Previews: PreviewProvider {
     static var previews: some View {
-        RtTokenChoiceView()
-            .background(Color.black.opacity(0.25))
+        RtTokenChoiceView { type in
+            print("type: \(type)")
+        }
+        .background(Color.black.opacity(0.25))
     }
 }

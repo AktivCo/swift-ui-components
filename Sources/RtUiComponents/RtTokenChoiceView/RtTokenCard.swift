@@ -8,10 +8,12 @@
 import SwiftUI
 
 
-enum RtTokenCard: CaseIterable {
+public enum RtTokenType: CaseIterable {
     case nfc
     case usb
+}
 
+extension RtTokenType {
     var title: String {
         switch self {
         case .nfc:
