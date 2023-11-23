@@ -34,12 +34,3 @@ public enum RtSheetSize {
         }
     }
 }
-
-extension UIApplication {
-    public var screenSize: CGRect {
-        let scenes = UIApplication.shared.connectedScenes
-        let windowScene = scenes.first as? UIWindowScene
-        let window = windowScene?.windows.first
-        return window?.screen.bounds ?? CGRect(x: 0, y: 0, width: 0, height: 0)
-    }
-}

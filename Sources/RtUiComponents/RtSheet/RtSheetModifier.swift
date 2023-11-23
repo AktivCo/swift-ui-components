@@ -12,15 +12,18 @@ private struct RtSheetModifier<V: View>: ViewModifier {
     @Environment(\.colorScheme) private var colorScheme
 
     @Binding var isPresented: Bool
-    @State private var sheetOffset: CGFloat
+    @State private var sheetOffset: CGFloat = UIScreen.main.bounds.height
+    @State private var screenHeight: CGFloat = UIScreen.main.bounds.height
     @State private var backgroundOpacity: CGFloat = 0
     @State var sheetContent: V?
     @State var parentViewDisabled = false
 
     @ViewBuilder private let contentBuilder: () -> V
 
-    private let screenHeight: CGFloat = UIApplication.shared.screenSize.height
-    private let showedOffset: CGFloat
+    var showedOffset: CGFloat {
+        (screenHeight - size.height) / (UIDevice.current.userInterfaceIdiom == .pad ? 2 : 1)
+    }
+
     private var showedOpacity: CGFloat { colorScheme == .dark ? 0.6 : 0.2 }
     private let delay = 0.5
     private let animation: Animation
@@ -36,12 +39,9 @@ private struct RtSheetModifier<V: View>: ViewModifier {
         self._isPresented = isPresented
         self.size = size
         self.isDraggable = isDraggable
-        self._sheetOffset = State(initialValue: screenHeight)
-        self.showedOffset = (screenHeight - size.height) / (UIDevice.current.userInterfaceIdiom == .pad ? 2 : 1)
         self.animation = Animation.easeInOut(duration: delay)
-
-        self.contentBuilder = content
         self.onDismiss = onDismiss
+        self.contentBuilder = content
     }
 
     private var indicator: some View {
@@ -98,12 +98,30 @@ private struct RtSheetModifier<V: View>: ViewModifier {
                 .frame(maxWidth: size.width, maxHeight: size.height)
                 .background { Color.RtColors.rtSurfaceTertiary }
                 .background(.ultraThinMaterial)
+                .opacity(sheetContent == nil ? 0 : 1)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .gesture(isDraggable ? dragToCloseGesture : nil)
                 .offset(y: sheetOffset)
         }
         .ignoresSafeArea()
         .coordinateSpace(name: coordinateSpaceName)
+        .onRotate { _ in
+            Task {
+                // Give a moment for the screen boundaries to change after the device is rotated
+                try await Task.sleep(for: .seconds(0.1))
+                await MainActor.run {
+                    withAnimation {
+                        if sheetOffset == screenHeight {
+                            screenHeight = UIScreen.main.bounds.height
+                            sheetOffset = screenHeight
+                        } else if sheetOffset == showedOffset {
+                            screenHeight = UIScreen.main.bounds.height
+                            sheetOffset = showedOffset
+                        }
+                    }
+                }
+            }
+        }
         .onChange(of: sheetOffset) { newValue in
             let percentage = 1 - (newValue - showedOffset) / (screenHeight - showedOffset)
             backgroundOpacity = showedOpacity * percentage
