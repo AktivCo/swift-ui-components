@@ -40,6 +40,7 @@ struct RtPinInputView: View {
 
             HStack(spacing: 0) {
                 SecureField("", text: $pin)
+                    .textContentType(.oneTimeCode)
                     .focused($isPinFieldFocused)
                     .frame(height: 44)
                     .textFieldStyle(PlainTextFieldStyle())

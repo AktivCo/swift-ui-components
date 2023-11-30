@@ -175,6 +175,7 @@ private struct RtSheetModifier<V: View>: ViewModifier {
             isPresented  = false
         }
 
+        UIApplication.endEditing()
         onDismiss()
     }
 }

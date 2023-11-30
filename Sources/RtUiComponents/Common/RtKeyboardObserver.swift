@@ -11,7 +11,7 @@ import UIKit
 
 // This add ability to hide keybaord on demand
 extension UIApplication {
-    func endEditing() {
+    static func endEditing() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
