@@ -11,6 +11,7 @@ import SwiftUI
 struct RtPinInputView: View {
     @State private var pin: String = ""
     @State private var error: String = ""
+    @FocusState private var isPinFieldFocused: Bool
 
     private let defaultPinGetter: () -> String
     private let onSubmit: (String) -> Void
@@ -39,6 +40,7 @@ struct RtPinInputView: View {
 
             HStack(spacing: 0) {
                 SecureField("", text: $pin)
+                    .focused($isPinFieldFocused)
                     .frame(height: 44)
                     .textFieldStyle(PlainTextFieldStyle())
                     .padding(.horizontal, 12)
@@ -75,6 +77,7 @@ struct RtPinInputView: View {
         .background { Color.clear }
         .onAppear {
             pin = defaultPinGetter()
+            isPinFieldFocused = true
         }
     }
 }
