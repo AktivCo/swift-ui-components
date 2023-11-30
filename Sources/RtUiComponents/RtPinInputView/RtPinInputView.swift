@@ -37,12 +37,25 @@ struct RtPinInputView: View {
                 .padding(.leading, 12)
                 .padding(.bottom, 7)
 
-            SecureField("", text: $pin)
-                .frame(height: 44)
-                .textFieldStyle(PlainTextFieldStyle())
-                .padding(.horizontal, 12)
-                .background(RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.RtColors.rtSurfaceQuaternary))
+            HStack(spacing: 0) {
+                SecureField("", text: $pin)
+                    .frame(height: 44)
+                    .textFieldStyle(PlainTextFieldStyle())
+                    .padding(.horizontal, 12)
+
+                if !pin.isEmpty {
+                    Button {
+                        pin = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .frame(width: 16, height: 16)
+                            .tint(.RtColors.rtIosElementsInputClearSurface)
+                    }
+                    .padding(.trailing, 12)
+                }
+            }
+            .background(RoundedRectangle(cornerRadius: 12)
+                .fill(Color.RtColors.rtSurfaceQuaternary))
 
             Text(error)
                 .padding(.horizontal, 12)

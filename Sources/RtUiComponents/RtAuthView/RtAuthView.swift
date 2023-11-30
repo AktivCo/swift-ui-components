@@ -56,6 +56,7 @@ public struct RtAuthView: View {
     }
 }
 
+
 struct RtAuthView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {

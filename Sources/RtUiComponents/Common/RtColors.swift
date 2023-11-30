@@ -28,6 +28,7 @@ public extension Color {
         public static let rtIosElementsAlertSurface = Color(UIColor(named: "rtIosElementsAlertSurface", in: .module, compatibleWith: nil)!)
         public static let rtIosElementsAlertOverlay = Color(UIColor(named: "rtIosElementsAlertOverlay", in: .module, compatibleWith: nil)!)
         public static let rtIosElementsAlertSeparator = Color(UIColor(named: "rtIosElementsAlertSeparator", in: .module, compatibleWith: nil)!)
+        public static let rtIosElementsInputClearSurface = Color(UIColor(named: "rtIosElementsInputClearSurface", in: .module, compatibleWith: nil)!)
         public static let rtLabelSecondary = Color(UIColor(named: "rtLabelSecondary", in: .module, compatibleWith: nil)!)
         public static let rtLabelTertiary = Color(UIColor(named: "rtLabelTertiary", in: .module, compatibleWith: nil)!)
         public static let rtOtherDisabled = Color(UIColor(named: "rtOtherDisabled", in: .module, compatibleWith: nil)!)
