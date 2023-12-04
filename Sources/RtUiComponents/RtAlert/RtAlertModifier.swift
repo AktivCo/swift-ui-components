@@ -19,7 +19,7 @@ private struct RtAlertModifier: ViewModifier {
     @Binding var isPresented: Bool
     var title: RtAlertTitle
     var subtitle: String?
-    var buttons: [RtAlertButton]
+    var buttons: [RtAlertButtonData]
 
     public func body(content: Content) -> some View {
         RtAlertView(isShowing: $isPresented, title: title, subTitle: subtitle,
@@ -35,14 +35,14 @@ private struct AlertContentView: View {
             Button("Toggle success alert") {
                 alertInfo = RtAlertModel(
                     title: .success("Подпись верна"),
-                    buttons: [.regular("ОК", { isAlertShown.toggle() })])
+                    buttons: [.init(.regular("ОК"))])
                 isAlertShown.toggle()
             }
             Button("Toggle failure alert") {
                 alertInfo = RtAlertModel(
                     title: .failure("Подпись неверна"),
                     subTitle: "И не удалось построить цепочку доверия для сертификата",
-                    buttons: [.regular("ОК", { isAlertShown.toggle() })])
+                    buttons: [.init(.regular("ОК"))])
                 isAlertShown.toggle()
             }
             Button("Toggle info alert") {
@@ -50,17 +50,16 @@ private struct AlertContentView: View {
                 alertInfo = RtAlertModel(
                     title: .titleOnly("Потеряно соединение с Рутокеном"),
                     subTitle: "Повторите подключение и не убирайте Рутокен до завершения обмена данными",
-                    buttons: [.bold("ОК", { isAlertShown.toggle() })])
+                    buttons: [.init(.bold("ОК"))])
             }
             Button("Toggle many buttons alert") {
                 isAlertShown.toggle()
                 alertInfo = RtAlertModel(
                     title: .titleOnly("Потеряно соединение с Рутокеном"),
                     subTitle: "Повторите подключение и не убирайте Рутокен до завершения обмена данными",
-                    buttons: [
-                        .bold("Повторить", { isAlertShown.toggle() }),
-                        .destructive("Уничтожить", { isAlertShown.toggle() }),
-                        .regular("Закрыть", { isAlertShown.toggle() })
+                    buttons: [.init(.bold("Повторить")),
+                              .init(.destructive("Уничтожить")),
+                              .init(.regular("Закрыть"))
                     ])
             }
             .padding(.bottom, 300)

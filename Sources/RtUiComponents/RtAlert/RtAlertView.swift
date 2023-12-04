@@ -12,7 +12,7 @@ struct RtAlertView<Presenter>: View where Presenter: View {
     @Binding var isShowing: Bool
     let title: RtAlertTitle
     let subTitle: String?
-    let buttons: [RtAlertButton]
+    let buttons: [RtAlertButtonData]
     let presentationView: Presenter
 
     var body: some View {
@@ -39,7 +39,12 @@ struct RtAlertView<Presenter>: View where Presenter: View {
                 ForEach(0..<buttons.count, id: \.self) { counter in
                     Divider()
                         .overlay(Color.RtColors.rtIosElementsAlertSeparator)
-                    buttons[counter].content
+                    Button(action: {
+                        buttons[counter].action?()
+                        isShowing = false
+                    }, label: {
+                        buttons[counter].title.text
+                    })
                         .frame(height: 44)
                         .multilineTextAlignment(.center)
                 }

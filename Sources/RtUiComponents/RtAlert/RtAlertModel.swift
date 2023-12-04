@@ -8,9 +8,9 @@
 public struct RtAlertModel {
     let title: RtAlertTitle
     let subTitle: String?
-    let buttons: [RtAlertButton]
+    let buttons: [RtAlertButtonData]
 
-    public init(title: RtAlertTitle, subTitle: String? = nil, buttons: [RtAlertButton]) {
+    public init(title: RtAlertTitle, subTitle: String? = nil, buttons: [RtAlertButtonData]) {
         self.title = title
         self.subTitle = subTitle
         self.buttons = buttons
