@@ -10,16 +10,14 @@ import SwiftUI
 
 struct RtPinInputView: View {
     @State private var pin: String = ""
-    @State private var error: String = ""
+    @EnvironmentObject private var error: RtPinInputError
     @FocusState private var isPinFieldFocused: Bool
 
     private let defaultPinGetter: () -> String
     private let onSubmit: (String) -> Void
 
-    init(error: String = "",
-         defaultPinGetter: @escaping () -> String,
+    init(defaultPinGetter: @escaping () -> String,
          onSubmit: @escaping (String) -> Void) {
-        self.error = error
         self.defaultPinGetter = defaultPinGetter
         self.onSubmit = onSubmit
     }
@@ -60,7 +58,7 @@ struct RtPinInputView: View {
             .background(RoundedRectangle(cornerRadius: 12)
                 .fill(Color.RtColors.rtSurfaceQuaternary))
 
-            Text(error)
+            Text(error.errorDescription)
                 .padding(.horizontal, 12)
                 .padding(.top, 5)
                 .font(.footnote)
@@ -87,9 +85,9 @@ struct RtPinInputView: View {
 struct RtPinInputView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            RtPinInputView(error: "Неверный PIN-код. Осталось попыток: 9",
-                           defaultPinGetter: { "12345678" },
+            RtPinInputView(defaultPinGetter: { "12345678" },
                            onSubmit: { _ in })
+            .environmentObject(RtPinInputError(errorDescription: "Неверный PIN-код. Осталось попыток: 9"))
         }
         .background(Color.black.opacity(0.25))
     }
