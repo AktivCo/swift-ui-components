@@ -45,6 +45,7 @@ struct RtAlertView<Presenter>: View where Presenter: View {
                 }
             }
             .background(Color.RtColors.rtIosElementsAlertSurface)
+            .background(.ultraThinMaterial)
             .cornerRadius(15)
             .opacity(self.isShowing ? 1 : 0)
             .frame(width: 270)

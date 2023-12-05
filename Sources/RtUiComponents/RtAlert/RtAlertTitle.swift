@@ -14,18 +14,24 @@ public enum RtAlertTitle {
     case titleOnly(String)
 
     var content: some View {
-        VStack {
+        VStack(spacing: 0) {
             switch self {
             case .success(let title):
-                Image("checkmark", bundle: .module)
-                    .padding(.bottom, 4)
+                Image(systemName: "checkmark.circle.fill")
+                    .resizable()
+                    .foregroundStyle(Color.RtColors.rtColorsSystemGreen)
+                    .frame(width: 40, height: 40)
+                    .padding(.bottom, 8)
                 Text(title)
                     .fontWeight(.semibold)
                     .font(.system(size: 17))
                     .multilineTextAlignment(.center)
             case .failure(let title):
-                Image("xmark", bundle: .module)
-                    .padding(.bottom, 4)
+                Image(systemName: "xmark.circle.fill")
+                    .resizable()
+                    .foregroundStyle(Color.RtColors.rtColorsSystemRed)
+                    .frame(width: 40, height: 40)
+                    .padding(.bottom, 8)
                 Text(title)
                     .fontWeight(.semibold)
                     .font(.system(size: 17))
