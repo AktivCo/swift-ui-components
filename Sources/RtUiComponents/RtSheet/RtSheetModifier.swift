@@ -8,51 +8,34 @@
 import SwiftUI
 
 
-private struct RtSheetModifier<V: View>: ViewModifier {
+private struct RtSheetModifier: ViewModifier {
     @Environment(\.colorScheme) private var colorScheme
 
-    @Binding var isPresented: Bool
+    @ObservedObject private var sheetModel: RtSheetModel
 
     @State private var sheetOffset: CGFloat = UIScreen.main.bounds.height
-    @State private var screenHeight: CGFloat = UIScreen.main.bounds.height
     @State private var backgroundOpacity: CGFloat = 0
-    @State var sheetContent: V?
-    @State var parentViewDisabled = false
+    @State private var parentViewDisabled = false
 
-    @ViewBuilder private let contentBuilder: () -> V
-
-    var showedOffset: CGFloat {
-        (screenHeight - size.height) / (UIDevice.current.userInterfaceIdiom == .pad ? 2 : 1)
+    @State private var screenHeight: CGFloat = UIScreen.main.bounds.height
+    private var showedOffset: CGFloat {
+        (screenHeight - sheetModel.size.height) / (UIDevice.current.userInterfaceIdiom == .pad ? 2 : 1)
     }
 
     private var showedOpacity: CGFloat { colorScheme == .dark ? 0.6 : 0.2 }
     private let delay = 0.5
     private let animation: Animation
-    private let size: RtSheetSize
-    private let isDraggable: Bool
     private let coordinateSpaceName = "RtSheetSpace"
 
-    private var onDismiss: () -> Void
-
-    public init(isPresented: Binding<Bool>, size: RtSheetSize, isDraggable: Bool,
-                _ onDismiss: @escaping () -> Void = {},
-                @ViewBuilder content: @escaping () -> V) {
-        self._isPresented = isPresented
-        self.size = size
-        self.isDraggable = isDraggable
-
+    public init(sheetModel: RtSheetModel) {
+        self.sheetModel = sheetModel
         self.animation = Animation.easeInOut(duration: delay)
-        self.onDismiss = onDismiss
-        self.contentBuilder = content
     }
 
     private var indicator: some View {
         RoundedRectangle(cornerRadius: 2.5)
             .fill(Color.RtColors.rtOtherGrabber)
-            .frame(
-                width: 36,
-                height: 5
-            )
+            .frame(width: 36, height: 5)
     }
 
     private var dragToCloseGesture: some Gesture {
@@ -63,10 +46,12 @@ private struct RtSheetModifier<V: View>: ViewModifier {
                 }
             }
             .onEnded {
-                if $0.translation.height > size.height / 2 {
-                    isPresented = false
+                if $0.translation.height > sheetModel.size.height / 2 {
+                    sheetModel.isPresented = false
                 } else {
-                    open()
+                    if sheetModel.isPresented {
+                        open()
+                    }
                 }
             }
     }
@@ -74,13 +59,14 @@ private struct RtSheetModifier<V: View>: ViewModifier {
     @ViewBuilder
     var sheetOverlay: some View {
         VStack(spacing: 0) {
-            if isDraggable {
+            if sheetModel.isDraggable {
                 self.indicator
                     .padding(.top, 6)
                     .padding(.bottom, 3)
             }
             VStack(spacing: 0) {
-                sheetContent
+                sheetModel.content
+                    .frame(maxHeight: sheetModel.size.height)
                 Spacer()
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -94,16 +80,19 @@ private struct RtSheetModifier<V: View>: ViewModifier {
 
             Color.black.opacity(backgroundOpacity)
                 .onTapGesture {
-                    isPresented = false
+                    if sheetModel.isDraggable {
+                        sheetModel.isPresented = false
+                    }
                 }
 
             sheetOverlay
-                .frame(maxWidth: size.width, maxHeight: size.height)
+                .frame(maxWidth: sheetModel.size.width,
+                       maxHeight: sheetModel.size.height,
+                       alignment: .top)
                 .background { Color.RtColors.rtSurfaceTertiary }
                 .background(.ultraThinMaterial)
-                .opacity(sheetContent == nil ? 0 : 1)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                .gesture(isDraggable ? dragToCloseGesture : nil)
+                .gesture(sheetModel.isDraggable ? dragToCloseGesture : nil)
                 .offset(y: sheetOffset)
         }
         .ignoresSafeArea()
@@ -129,15 +118,13 @@ private struct RtSheetModifier<V: View>: ViewModifier {
             let percentage = 1 - (newValue - showedOffset) / (screenHeight - showedOffset)
             backgroundOpacity = showedOpacity * percentage
         }
-        .onChange(of: isPresented) {
+        .onChange(of: sheetModel.isPresented) {
             $0 ? open() : close()
         }
     }
 
     private func open() {
         parentViewDisabled = true
-        sheetContent = contentBuilder()
-
         Task {
             withAnimation(animation) {
                 sheetOffset = showedOffset
@@ -155,36 +142,35 @@ private struct RtSheetModifier<V: View>: ViewModifier {
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-            sheetContent = nil
             parentViewDisabled = false
-            isPresented  = false
+            sheetModel.content = nil
         }
 
         UIApplication.endEditing()
-        onDismiss()
     }
 }
 
 public extension View {
-    func rtSheet<V: View>(
-        isPresented: Binding<Bool>,
-        size: RtSheetSize,
-        isDraggable: Bool = true,
-        _ onDismiss: @escaping () -> Void = {},
-        @ViewBuilder content: @escaping () -> V
+    func rtSheet(
+        sheetModel: RtSheetModel
     ) -> some View {
         modifier(
-            RtSheetModifier(isPresented: isPresented, size: size, isDraggable: isDraggable,
-                            onDismiss, content: content)
+            RtSheetModifier(sheetModel: sheetModel)
         )
     }
 }
 
 private struct AnotherView: View {
+    let onDismiss: () -> Void
     var body: some View {
         VStack {
             Spacer()
             Text("Another view")
+            Button {
+                onDismiss()
+            } label: {
+               Text("Close sheet")
+            }
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: 200)
@@ -197,7 +183,7 @@ private struct AnotherView: View {
 private struct PinInputView: View {
     @Binding var errorMessage: String
     @State var text = "some text"
-
+    let onDismiss: (() -> Void)
     var body: some View {
         NavigationStack {
             ZStack(alignment: .top) {
@@ -209,6 +195,10 @@ private struct PinInputView: View {
                     Spacer()
                     NavigationLink(destination: { Text("This is screen number 2") }, label: {
                         Text("Go to screen 2") })
+                    Spacer()
+                    Button("Close sheet") {
+                        onDismiss()
+                    }
                     Spacer()
                     Button(text) {
                         text = "text has changed"
@@ -225,11 +215,10 @@ private struct PinInputView: View {
 }
 
 private struct RtSheetModifierView: View {
-    @State private var isPresented = false
     @State var text = "Some error"
-    @State var viewBuilder: any View = EmptyView()
     var size: RtSheetSize
     @State var isDraggable: Bool = false
+    @StateObject var sheetModel = RtSheetModel(size: .largePhone, isDraggable: true, content: AnyView(EmptyView()))
 
     var body: some View {
         VStack {
@@ -238,22 +227,28 @@ private struct RtSheetModifierView: View {
 
             Spacer().frame(height: 50)
             Button("show PinInputView") {
-                viewBuilder = PinInputView(errorMessage: $text)
-                isPresented.toggle()
+                sheetModel.isDraggable = isDraggable
+                sheetModel.size = size
+                sheetModel.content = AnyView(PinInputView(
+                    errorMessage: $text,
+                    onDismiss: { sheetModel.isPresented = false }
+                ))
+                sheetModel.isPresented = true
             }
             Spacer().frame(height: 50)
             Button("show another sheet") {
-                viewBuilder = AnotherView()
-                isPresented.toggle()
+                sheetModel.isDraggable = isDraggable
+                sheetModel.size = size
+                sheetModel.content = AnyView(AnotherView(
+                    onDismiss: { sheetModel.isPresented = false }))
+                sheetModel.isPresented = true
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background {
             Color.green
         }
-        .rtSheet(isPresented: $isPresented, size: size, isDraggable: isDraggable) {
-            AnyView(viewBuilder)
-        }
+        .rtSheet(sheetModel: sheetModel)
         .ignoresSafeArea()
     }
 }
