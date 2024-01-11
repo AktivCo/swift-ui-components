@@ -43,6 +43,7 @@ public struct RtAuthView: View {
                     } onSubmit: { pin in
                         onSubmit(tokenType, pin)
                     }
+                    .rtAdaptToKeyboard()
                 } else {
                     RtTokenChoiceView { type in
                         tokenType = type

@@ -11,13 +11,10 @@ import SwiftUI
 private struct RtSheetModifier<V: View>: ViewModifier {
     @Environment(\.colorScheme) private var colorScheme
 
-    @StateObject var keyboardObserver = RtKeyboardObserver()
-
     @Binding var isPresented: Bool
 
     @State private var sheetOffset: CGFloat = UIScreen.main.bounds.height
     @State private var screenHeight: CGFloat = UIScreen.main.bounds.height
-    @State private var sheetContentHeight: CGFloat
     @State private var backgroundOpacity: CGFloat = 0
     @State var sheetContent: V?
     @State var parentViewDisabled = false
@@ -43,7 +40,6 @@ private struct RtSheetModifier<V: View>: ViewModifier {
         self._isPresented = isPresented
         self.size = size
         self.isDraggable = isDraggable
-        self._sheetContentHeight = State(initialValue: size.height)
 
         self.animation = Animation.easeInOut(duration: delay)
         self.onDismiss = onDismiss
@@ -85,7 +81,6 @@ private struct RtSheetModifier<V: View>: ViewModifier {
             }
             VStack(spacing: 0) {
                 sheetContent
-                    .frame(maxHeight: sheetContentHeight)
                 Spacer()
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -133,16 +128,6 @@ private struct RtSheetModifier<V: View>: ViewModifier {
         .onChange(of: sheetOffset) { newValue in
             let percentage = 1 - (newValue - showedOffset) / (screenHeight - showedOffset)
             backgroundOpacity = showedOpacity * percentage
-        }
-        .onReceive(keyboardObserver.$height) { newValue in
-            withAnimation(animation) {
-                if UIDevice.isPhone {
-                    sheetContentHeight = size.height - newValue
-                } else {
-                    let diff = (screenHeight - size.height) / 2
-                    sheetContentHeight = min(size.height, size.height - (newValue - diff))
-                }
-            }
         }
         .onChange(of: isPresented) {
             $0 ? open() : close()

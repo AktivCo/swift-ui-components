@@ -35,6 +35,9 @@ struct RtPinInputView: View {
                 .foregroundStyle(Color.RtColors.rtLabelSecondary)
                 .padding(.leading, 12)
                 .padding(.bottom, 7)
+                .onTapGesture {
+                    isPinFieldFocused = false
+                }
 
             HStack(spacing: 0) {
                 SecureField("", text: $pin)
