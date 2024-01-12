@@ -97,23 +97,6 @@ private struct RtSheetModifier: ViewModifier {
         }
         .ignoresSafeArea()
         .coordinateSpace(name: coordinateSpaceName)
-        .onRotate { _ in
-            Task {
-                // Give a moment for the screen boundaries to change after the device is rotated
-                try await Task.sleep(for: .seconds(0.1))
-                await MainActor.run {
-                    withAnimation {
-                        if sheetOffset == screenHeight {
-                            screenHeight = UIScreen.main.bounds.height
-                            sheetOffset = screenHeight
-                        } else if sheetOffset == showedOffset {
-                            screenHeight = UIScreen.main.bounds.height
-                            sheetOffset = showedOffset
-                        }
-                    }
-                }
-            }
-        }
         .onChange(of: sheetOffset) { newValue in
             let percentage = 1 - (newValue - showedOffset) / (screenHeight - showedOffset)
             backgroundOpacity = showedOpacity * percentage
