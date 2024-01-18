@@ -64,12 +64,8 @@ private struct RtSheetModifier: ViewModifier {
                     .padding(.top, 6)
                     .padding(.bottom, 3)
             }
-            VStack(spacing: 0) {
-                sheetModel.content
-                    .frame(maxHeight: sheetModel.size.height)
-                Spacer()
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            sheetModel.content
+                .frame(maxWidth: .infinity, maxHeight: sheetModel.size.height)
         }
     }
 
