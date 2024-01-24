@@ -58,14 +58,14 @@ private struct RtSheetModifier: ViewModifier {
 
     @ViewBuilder
     var sheetOverlay: some View {
-        VStack(spacing: 0) {
+        ZStack(alignment: .top) {
+            sheetModel.content
+                .frame(maxWidth: .infinity, maxHeight: sheetModel.size.height)
             if sheetModel.isDraggable {
                 self.indicator
                     .padding(.top, 6)
                     .padding(.bottom, 3)
             }
-            sheetModel.content
-                .frame(maxWidth: .infinity, maxHeight: sheetModel.size.height)
         }
     }
 
