@@ -8,6 +8,7 @@
 import SwiftUI
 
 
+/// Types of button titles
 public enum RtAlertButtonTitle {
     case destructive(String)
     case regular(String)

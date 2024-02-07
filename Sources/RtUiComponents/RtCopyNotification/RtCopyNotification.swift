@@ -8,7 +8,7 @@
 import SwiftUI
 
 
-public struct RtCopyNotification: View {
+struct RtCopyNotification: View {
     private var text: String
     public init(with text: String) { self.text = text }
 

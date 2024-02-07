@@ -15,6 +15,14 @@ extension UIApplication {
     }
 }
 
+public extension View {
+    /// The modifier that allows the view to change its state in accordance with the keyboard
+    func rtAdaptToKeyboard() -> some View {
+        self.modifier(AdaptToKeyboard())
+    }
+}
+
+
 private struct AdaptToKeyboard: ViewModifier {
     @State var offset: CGFloat = 0
 
@@ -27,7 +35,7 @@ private struct AdaptToKeyboard: ViewModifier {
                 .padding(.bottom, offset)
                 .onReceive(keyboardWillShowNotification) {
                     guard let keyboardheight = ($0.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect)?.height,
-                          let animation = getAnimtaion(from: $0) else {
+                          let animation = getAnimation(from: $0) else {
                         return
                     }
 
@@ -42,7 +50,7 @@ private struct AdaptToKeyboard: ViewModifier {
                     }
                 }
                 .onReceive(keyboardWillHideNotification) {
-                    guard let animation = getAnimtaion(from: $0) else {
+                    guard let animation = getAnimation(from: $0) else {
                         return
                     }
                     withAnimation(animation) {
@@ -52,7 +60,7 @@ private struct AdaptToKeyboard: ViewModifier {
         }
     }
 
-    func getAnimtaion(from notification: Notification) -> Animation? {
+    func getAnimation(from notification: Notification) -> Animation? {
         guard let info = notification.userInfo,
               let duration = info[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double,
               let curveValue = info[UIResponder.keyboardAnimationCurveUserInfoKey] as? Int,
@@ -68,11 +76,5 @@ private struct AdaptToKeyboard: ViewModifier {
             Double(timing.controlPoint2.y),
             duration: duration
         )
-    }
-}
-
-public extension View {
-    func rtAdaptToKeyboard() -> some View {
-        self.modifier(AdaptToKeyboard())
     }
 }

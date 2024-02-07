@@ -8,6 +8,7 @@
 import Foundation
 
 
+/// Object that handles possible errors for showing on RtPinInputView
 public class RtPinInputError: ObservableObject {
     @Published public var errorDescription: String
 

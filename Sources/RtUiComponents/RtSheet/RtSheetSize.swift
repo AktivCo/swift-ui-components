@@ -8,6 +8,7 @@
 import Foundation
 
 
+/// Enum of available sheet sizes
 public enum RtSheetSize {
     case smallPhone
     case largePhone

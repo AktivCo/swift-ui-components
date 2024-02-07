@@ -8,6 +8,7 @@
 import SwiftUI
 
 
+/// View for notifying the user to begin interacting with the VCR
 public struct RtVcrIndicator: View {
     let vcrName: String
 

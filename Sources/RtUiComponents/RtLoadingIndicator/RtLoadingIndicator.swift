@@ -8,6 +8,7 @@
 import SwiftUI
 
 
+/// Component that describes loading indicators
 public struct RtLoadingIndicator: View {
     private let type: RtLoadingIndicatorType
     @State private var isAnimating: Bool = false

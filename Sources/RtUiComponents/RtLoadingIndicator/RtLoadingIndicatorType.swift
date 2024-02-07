@@ -8,6 +8,7 @@
 import SwiftUI
 
 
+/// Enum of available loading indicators
 public enum RtLoadingIndicatorType {
     case big
     case small

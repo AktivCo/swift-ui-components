@@ -9,6 +9,9 @@ import SwiftUI
 
 
 public extension View {
+    /// Presents an alert based on RtAlertModel
+    /// - Parameter alertModel: A binding to a RtAlertModel optional that determines whether to present the alert
+    /// that is described in the model
     func rtAlert(alertModel: Binding<RtAlertModel?>) -> some View {
         return self.modifier(RtAlertModifier(alertModel: alertModel))
     }

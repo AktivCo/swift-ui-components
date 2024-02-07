@@ -8,6 +8,18 @@
 import SwiftUI
 
 
+public extension View {
+    /// Presents a sheet based on RtSheetModel
+    /// - Parameter sheetModel: Model that determines parameters of the sheet
+    func rtSheet(
+        sheetModel: RtSheetModel
+    ) -> some View {
+        modifier(
+            RtSheetModifier(sheetModel: sheetModel)
+        )
+    }
+}
+
 private struct RtSheetModifier: ViewModifier {
     @Environment(\.colorScheme) private var colorScheme
 
@@ -129,16 +141,6 @@ private struct RtSheetModifier: ViewModifier {
     }
 }
 
-public extension View {
-    func rtSheet(
-        sheetModel: RtSheetModel
-    ) -> some View {
-        modifier(
-            RtSheetModifier(sheetModel: sheetModel)
-        )
-    }
-}
-
 private struct AnotherView: View {
     let onDismiss: () -> Void
     var body: some View {
@@ -159,36 +161,26 @@ private struct AnotherView: View {
     }
 }
 
-private struct PinInputView: View {
+private struct TestView: View {
     @Binding var errorMessage: String
     @State var text = "some text"
     let onDismiss: (() -> Void)
     var body: some View {
-        NavigationStack {
-            ZStack(alignment: .top) {
-                Color.gray
-                    .ignoresSafeArea()
-                VStack {
-                    Spacer()
-                    NavigationLink(destination: { Text("This is screen number 1") }, label: { Text("Go to screen 1") })
-                    Spacer()
-                    NavigationLink(destination: { Text("This is screen number 2") }, label: {
-                        Text("Go to screen 2") })
-                    Spacer()
-                    Button("Close sheet") {
-                        onDismiss()
-                    }
-                    Spacer()
-                    Button(text) {
-                        text = "text has changed"
-                    }
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity, maxHeight: 400)
-                .background {
-                    Color.red
-                }
+        VStack {
+            Spacer()
+            Button("Close sheet") {
+                onDismiss()
             }
+            Spacer()
+            Button(text) {
+                text = "text has changed"
+            }
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background {
+            Color.red
+                .ignoresSafeArea()
         }
     }
 }
@@ -208,7 +200,7 @@ private struct RtSheetModifierView: View {
             Button("show PinInputView") {
                 sheetModel.isDraggable = isDraggable
                 sheetModel.size = size
-                sheetModel.content = AnyView(PinInputView(
+                sheetModel.content = AnyView(TestView(
                     errorMessage: $text,
                     onDismiss: { sheetModel.isPresented = false }
                 ))

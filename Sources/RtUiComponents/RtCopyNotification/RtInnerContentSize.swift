@@ -8,6 +8,7 @@
 import SwiftUI
 
 
+/// Helper struct for handling showing of the copy notification above tabbar
 public struct RtInnerContentSize: PreferenceKey {
     public typealias Value = [CGRect]
     public static var defaultValue: [CGRect] = []

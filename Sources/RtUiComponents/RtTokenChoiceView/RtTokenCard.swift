@@ -8,6 +8,7 @@
 import SwiftUI
 
 
+/// Enum of available types of interactions with token
 public enum RtTokenType: CaseIterable {
     case nfc
     case usb

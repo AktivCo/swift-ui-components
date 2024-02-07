@@ -8,6 +8,7 @@
 import SwiftUI
 
 
+/// Enum of available alert titles
 public enum RtAlertTitle {
     case success(String)
     case failure(String)

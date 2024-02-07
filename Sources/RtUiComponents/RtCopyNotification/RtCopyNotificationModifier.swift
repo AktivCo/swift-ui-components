@@ -8,7 +8,27 @@
 import SwiftUI
 
 
-public struct RtCopyNotificationModifier: ViewModifier {
+public extension View {
+    /**
+     Presents the notification when a binding to a Boolean value that you provide is true
+
+     - parameter isPresented: A binding to a Boolean value that determines whether to present the notification
+     - parameter text: Content of the notification
+
+     This notification is shown above the tabbar on top of all windows
+     not just the one from which the notification was called
+    */
+    func rtCopyNotification(
+        isPresented: Binding<Bool>,
+        _ text: String
+    ) -> some View {
+        modifier(
+            RtCopyNotificationModifier(isPresented, text)
+        )
+    }
+}
+
+private struct RtCopyNotificationModifier: ViewModifier {
     @Binding var isPresented: Bool
 
     private var text: String
@@ -19,7 +39,7 @@ public struct RtCopyNotificationModifier: ViewModifier {
     @State private var scale: CGFloat = 0.75
     @State private var opacity: CGFloat = 0
 
-    public init( _ text: String, _ isPresented: Binding<Bool>) {
+    public init(_ isPresented: Binding<Bool>, _ text: String) {
         self._isPresented = isPresented
         self.text = text
     }
@@ -59,17 +79,6 @@ public struct RtCopyNotificationModifier: ViewModifier {
                 }
             }
         }
-    }
-}
-
-public extension View {
-    func rtCopyNotification(
-        _ text: String,
-        isPresented: Binding<Bool>
-    ) -> some View {
-        modifier(
-            RtCopyNotificationModifier(text, isPresented)
-        )
     }
 }
 
@@ -137,7 +146,7 @@ private struct ContentView: View {
                 Text(selectedIpadTab.rawValue)
             }
         }
-        .rtCopyNotification(text, isPresented: $isPresented)
+        .rtCopyNotification(isPresented: $isPresented, text)
         .navigationSplitViewStyle(.balanced)
     }
 
@@ -164,7 +173,7 @@ private struct ContentView: View {
                 .tag(tab)
             }
         }
-        .rtCopyNotification(text, isPresented: $isPresented)
+        .rtCopyNotification(isPresented: $isPresented, text)
     }
 
     func showNotification(with text: String) {
