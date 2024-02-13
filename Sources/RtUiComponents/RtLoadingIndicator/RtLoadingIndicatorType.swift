@@ -57,7 +57,7 @@ public enum RtLoadingIndicatorType {
         case .big:
             return 48
         case .small:
-            return 20
+            return 24
         }
     }
 }
