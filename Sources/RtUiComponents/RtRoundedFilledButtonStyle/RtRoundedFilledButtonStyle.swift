@@ -8,7 +8,10 @@
 import SwiftUI
 
 
-struct RtRoundedFilledButtonStyle: ButtonStyle {
+/// The special style for buttons
+public struct RtRoundedFilledButtonStyle: ButtonStyle {
+    public init(){}
+
     public func makeBody(configuration: ButtonStyle.Configuration) -> some View {
         InnerBody(configuration: configuration)
     }
