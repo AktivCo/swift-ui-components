@@ -17,8 +17,11 @@ extension UIApplication {
 
 public extension View {
     /// The modifier that allows the view to change its state in accordance with the keyboard
-    func rtAdaptToKeyboard() -> some View {
-        self.modifier(AdaptToKeyboard())
+    /// - Parameters:
+    ///   - onAppear: Callback called when the keyboard appears with a same animation
+    ///   - onDisappear: Callback called when the keyboard disappears with a same animation
+    func rtAdaptToKeyboard(onAppear: @escaping () -> Void = {}, onDisappear: @escaping () -> Void = {}) -> some View {
+        self.modifier(AdaptToKeyboard(onAppear, onDisappear))
     }
 }
 
@@ -26,8 +29,16 @@ public extension View {
 private struct AdaptToKeyboard: ViewModifier {
     @State var offset: CGFloat = 0
 
-    private var keyboardWillShowNotification = NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)
-    private var keyboardWillHideNotification = NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)
+    private let keyboardWillShowNotification = NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)
+    private let keyboardWillHideNotification = NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)
+
+    private let onAppear: () -> Void
+    private let onDisappear: () -> Void
+
+    init(_ onAppear: @escaping () -> Void, _ onDisappear: @escaping () -> Void) {
+        self.onAppear = onAppear
+        self.onDisappear = onDisappear
+    }
 
     func body(content: Content) -> some View {
         GeometryReader { geo in
@@ -43,10 +54,11 @@ private struct AdaptToKeyboard: ViewModifier {
                     let heightAboveKeyboard = screenHeight - keyboardheight
                     let rect = geo.frame(in: .global)
 
-                    if rect.maxY > heightAboveKeyboard {
-                        withAnimation(animation) {
+                    withAnimation(animation) {
+                        if rect.maxY > heightAboveKeyboard {
                             offset = rect.maxY - heightAboveKeyboard
                         }
+                        onAppear()
                     }
                 }
                 .onReceive(keyboardWillHideNotification) {
@@ -55,6 +67,7 @@ private struct AdaptToKeyboard: ViewModifier {
                     }
                     withAnimation(animation) {
                         offset = 0
+                        onDisappear()
                     }
                 }
         }
