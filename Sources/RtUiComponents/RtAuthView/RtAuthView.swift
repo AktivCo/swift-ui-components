@@ -16,11 +16,11 @@ import SwiftUI
 public struct RtAuthView: View {
     @State private var tokenType: RtTokenType?
 
-    private let defaultPinGetter: () -> String
+    private let defaultPinGetter: () -> Void
     private let onSubmit: (RtTokenType, String) -> Void
     private let onCancel: () -> Void
 
-    public init(defaultPinGetter: @escaping () -> String,
+    public init(defaultPinGetter: @escaping () -> Void,
                 onSubmit: @escaping (RtTokenType, String) -> Void,
                 onCancel: @escaping () -> Void) {
         self.defaultPinGetter = defaultPinGetter
@@ -66,7 +66,8 @@ public struct RtAuthView: View {
 struct RtAuthView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            RtAuthView { "12345678" } onSubmit: { _, _ in } onCancel: {}
+            RtAuthView {} onSubmit: { _, _ in } onCancel: {}
+                .environmentObject(RtPinInputModel())
         }
     }
 }

@@ -9,14 +9,14 @@ import SwiftUI
 
 
 struct RtPinInputView: View {
-    @State private var pin: String = ""
-    @EnvironmentObject private var error: RtPinInputError
+    @EnvironmentObject private var model: RtPinInputModel
     @FocusState private var isPinFieldFocused: Bool
+    @State private var inProgress: Bool = false
 
-    private let defaultPinGetter: () -> String
+    private let defaultPinGetter: () -> Void
     private let onSubmit: (String) -> Void
 
-    init(defaultPinGetter: @escaping () -> String,
+    init(defaultPinGetter: @escaping () -> Void,
          onSubmit: @escaping (String) -> Void) {
         self.defaultPinGetter = defaultPinGetter
         self.onSubmit = onSubmit
@@ -40,16 +40,18 @@ struct RtPinInputView: View {
                 }
 
             HStack(spacing: 0) {
-                SecureField("", text: $pin)
-                    .textContentType(.oneTimeCode)
-                    .focused($isPinFieldFocused)
-                    .frame(height: 44)
-                    .textFieldStyle(PlainTextFieldStyle())
-                    .padding(.horizontal, 12)
+                SecureField("", text: .init(
+                    get: { model.pin },
+                    set: { value in model.pin = value }))
+                .textContentType(.oneTimeCode)
+                .focused($isPinFieldFocused)
+                .frame(height: 44)
+                .textFieldStyle(PlainTextFieldStyle())
+                .padding(.horizontal, 12)
 
-                if !pin.isEmpty {
+                if !model.pin.isEmpty {
                     Button {
-                        pin = ""
+                        model.pin = ""
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .frame(width: 16, height: 16)
@@ -61,7 +63,7 @@ struct RtPinInputView: View {
             .background(RoundedRectangle(cornerRadius: 12)
                 .fill(Color.RtColors.rtSurfaceQuaternary))
 
-            Text(error.errorDescription)
+            Text(model.errorDescription)
                 .padding(.horizontal, 12)
                 .padding(.top, 5)
                 .font(.footnote)
@@ -69,17 +71,39 @@ struct RtPinInputView: View {
 
             Spacer()
 
-            Button("Продолжить") {
-                onSubmit(pin)
+            Button {
+                if !inProgress {
+                    onSubmit(model.pin)
+                }
+            } label: {
+                buttonLabel
+                    .frame(height: 50)
+                    .frame(maxWidth: .infinity)
             }
             .buttonStyle(RtRoundedFilledButtonStyle())
-            .disabled(pin.isEmpty)
+            .disabled(model.pin.isEmpty)
         }
         .padding(.bottom, UIDevice.isPhone ? 20 : 48)
         .background { Color.clear }
         .onAppear {
-            pin = defaultPinGetter()
+            defaultPinGetter()
             isPinFieldFocused = true
+        }
+        .onChange(of: model.inProgress) { newValue in
+            inProgress = newValue
+        }
+    }
+
+    @ViewBuilder
+    private var buttonLabel: some View {
+        if inProgress {
+            RtLoadingIndicator(.small)
+                .padding(.vertical, 13)
+        } else {
+            Text("Продолжить")
+                .font(.headline)
+                .foregroundStyle(Color.RtColors.rtColorsOnPrimary)
+                .padding(.vertical, 15)
         }
     }
 }
@@ -88,9 +112,9 @@ struct RtPinInputView: View {
 struct RtPinInputView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            RtPinInputView(defaultPinGetter: { "12345678" },
+            RtPinInputView(defaultPinGetter: { },
                            onSubmit: { _ in })
-            .environmentObject(RtPinInputError(errorDescription: "Неверный PIN-код. Осталось попыток: 9"))
+            .environmentObject(RtPinInputModel(errorDescription: "Неверный PIN-код. Осталось попыток: 9"))
         }
         .background(Color.black.opacity(0.25))
     }
