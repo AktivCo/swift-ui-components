@@ -5,6 +5,8 @@
 //  Created by Vova Badyaev on 11.01.2024.
 //
 
+import Combine
+import Foundation
 import SwiftUI
 
 
@@ -27,10 +29,18 @@ public extension View {
 
 
 private struct AdaptToKeyboard: ViewModifier {
-    @State var offset: CGFloat = 0
+    @State private var bottomPadding: CGFloat = 0
 
-    private let keyboardWillShowNotification = NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)
-    private let keyboardWillHideNotification = NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)
+    private var keyboardHeightPublisher: AnyPublisher<(CGFloat, Animation?), Never> {
+        let willShow = NotificationCenter.default.publisher(for: UIApplication.keyboardWillShowNotification)
+            .map { ($0.keyboardHeight, $0.keyboardAnimation) }
+
+        let willHide = NotificationCenter.default.publisher(for: UIApplication.keyboardWillHideNotification)
+            .map { (CGFloat(0), $0.keyboardAnimation) }
+
+        return Publishers.MergeMany(willShow, willHide)
+            .eraseToAnyPublisher()
+    }
 
     private let onAppear: () -> Void
     private let onDisappear: () -> Void
@@ -41,53 +51,24 @@ private struct AdaptToKeyboard: ViewModifier {
     }
 
     func body(content: Content) -> some View {
-        GeometryReader { geo in
+        GeometryReader { proxy in
             content
-                .padding(.bottom, offset)
-                .onReceive(keyboardWillShowNotification) {
-                    guard let keyboardheight = ($0.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect)?.height,
-                          let animation = getAnimation(from: $0) else {
-                        return
-                    }
-
+                .padding(.bottom, bottomPadding)
+                .onReceive(keyboardHeightPublisher) { keyboardHeight, animation in
                     let screenHeight = UIScreen.main.bounds.height
-                    let heightAboveKeyboard = screenHeight - keyboardheight
-                    let rect = geo.frame(in: .global)
+                    let heightAboveKeyboard = screenHeight - keyboardHeight
+                    let rect = proxy.frame(in: .global)
 
                     withAnimation(animation) {
                         if rect.maxY > heightAboveKeyboard {
-                            offset = rect.maxY - heightAboveKeyboard
+                            bottomPadding = rect.maxY - heightAboveKeyboard
+                            onAppear()
+                        } else {
+                            bottomPadding = 0
+                            onDisappear()
                         }
-                        onAppear()
                     }
-                }
-                .onReceive(keyboardWillHideNotification) {
-                    guard let animation = getAnimation(from: $0) else {
-                        return
-                    }
-                    withAnimation(animation) {
-                        offset = 0
-                        onDisappear()
-                    }
-                }
+            }
         }
-    }
-
-    func getAnimation(from notification: Notification) -> Animation? {
-        guard let info = notification.userInfo,
-              let duration = info[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double,
-              let curveValue = info[UIResponder.keyboardAnimationCurveUserInfoKey] as? Int,
-              let uiKitCurve = UIView.AnimationCurve(rawValue: curveValue) else {
-            return nil
-        }
-
-        let timing = UICubicTimingParameters(animationCurve: uiKitCurve)
-        return Animation.timingCurve(
-            Double(timing.controlPoint1.x),
-            Double(timing.controlPoint1.y),
-            Double(timing.controlPoint2.x),
-            Double(timing.controlPoint2.y),
-            duration: duration
-        )
     }
 }
