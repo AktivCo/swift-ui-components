@@ -81,7 +81,7 @@ struct RtPinInputView: View {
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(RtRoundedFilledButtonStyle())
-            .disabled(model.pin.isEmpty)
+            .disabled(model.pin.isEmpty || model.isContinueButtonDisabled)
         }
         .padding(.bottom, UIDevice.isPhone ? 20 : 48)
         .background { Color.clear }
@@ -102,7 +102,6 @@ struct RtPinInputView: View {
         } else {
             Text("Продолжить")
                 .font(.headline)
-                .foregroundStyle(Color.RtColors.rtColorsOnPrimary)
                 .padding(.vertical, 15)
         }
     }
@@ -117,5 +116,13 @@ struct RtPinInputView_Previews: PreviewProvider {
             .environmentObject(RtPinInputModel(errorDescription: "Неверный PIN-код. Осталось попыток: 9"))
         }
         .background(Color.black.opacity(0.25))
+
+        VStack {
+            RtPinInputView(defaultPinGetter: { },
+                           onSubmit: { _ in })
+            .environmentObject(RtPinInputModel(isContinueButtonDisabled: true))
+        }
+        .background(Color.black.opacity(0.25))
+        .previewDisplayName("With disabled continue button")
     }
 }

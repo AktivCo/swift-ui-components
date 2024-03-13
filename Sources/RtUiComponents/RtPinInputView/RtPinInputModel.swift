@@ -13,10 +13,15 @@ public class RtPinInputModel: ObservableObject {
     @Published public var errorDescription: String
     @Published public var inProgress: Bool
     @Published public var pin: String
+    @Published public var isContinueButtonDisabled: Bool
 
-    public init(errorDescription: String = "", inProgress: Bool = false, pin: String = "12345678") {
+    public init(errorDescription: String = "",
+                inProgress: Bool = false,
+                pin: String = "12345678",
+                isContinueButtonDisabled: Bool = false) {
         self.errorDescription = errorDescription
         self.inProgress = inProgress
         self.pin = pin
+        self.isContinueButtonDisabled = isContinueButtonDisabled
     }
 }
