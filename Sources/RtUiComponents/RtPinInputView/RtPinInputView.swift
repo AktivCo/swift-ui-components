@@ -92,6 +92,9 @@ struct RtPinInputView: View {
         .onChange(of: model.inProgress) { newValue in
             inProgress = newValue
         }
+        .onDisappear {
+            model.errorDescription = ""
+        }
     }
 
     @ViewBuilder
