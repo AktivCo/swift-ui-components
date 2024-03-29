@@ -70,17 +70,10 @@ struct RtPinInputView: View {
                 .foregroundColor(Color.RtColors.rtColorsSystemRed)
 
             Spacer()
-
-            Button {
-                if !inProgress {
+            RtLoadingButton(action: {
                     onSubmit(model.pin)
-                }
-            } label: {
-                buttonLabel
-                    .frame(height: 50)
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(RtRoundedFilledButtonStyle())
+            }, title: "Продолжить",
+                     inProgress: $inProgress)
             .disabled(model.pin.isEmpty || model.isContinueButtonDisabled)
         }
         .padding(.bottom, UIDevice.isPhone ? 20 : 48)
@@ -94,18 +87,6 @@ struct RtPinInputView: View {
         }
         .onDisappear {
             model.errorDescription = ""
-        }
-    }
-
-    @ViewBuilder
-    private var buttonLabel: some View {
-        if inProgress {
-            RtLoadingIndicator(.small)
-                .padding(.vertical, 13)
-        } else {
-            Text("Продолжить")
-                .font(.headline)
-                .padding(.vertical, 15)
         }
     }
 }
