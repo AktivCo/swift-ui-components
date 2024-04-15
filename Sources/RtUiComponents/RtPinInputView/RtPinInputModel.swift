@@ -17,7 +17,7 @@ public class RtPinInputModel: ObservableObject {
 
     public init(errorDescription: String = "",
                 inProgress: Bool = false,
-                pin: String = "12345678",
+                pin: String,
                 isContinueButtonDisabled: Bool = false) {
         self.errorDescription = errorDescription
         self.inProgress = inProgress

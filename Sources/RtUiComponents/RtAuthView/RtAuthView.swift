@@ -67,7 +67,7 @@ struct RtAuthView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             RtAuthView {} onSubmit: { _, _ in } onCancel: {}
-                .environmentObject(RtPinInputModel())
+                .environmentObject(RtPinInputModel(pin: "12345678"))
         }
     }
 }

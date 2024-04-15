@@ -97,14 +97,14 @@ struct RtPinInputView_Previews: PreviewProvider {
         VStack {
             RtPinInputView(defaultPinGetter: { },
                            onSubmit: { _ in })
-            .environmentObject(RtPinInputModel(errorDescription: "Неверный PIN-код. Осталось попыток: 9"))
+            .environmentObject(RtPinInputModel(errorDescription: "Неверный PIN-код. Осталось попыток: 9", pin: "12345678"))
         }
         .background(Color.black.opacity(0.25))
 
         VStack {
             RtPinInputView(defaultPinGetter: { },
                            onSubmit: { _ in })
-            .environmentObject(RtPinInputModel(isContinueButtonDisabled: true))
+            .environmentObject(RtPinInputModel(pin: "12345678", isContinueButtonDisabled: true))
         }
         .background(Color.black.opacity(0.25))
         .previewDisplayName("With disabled continue button")
