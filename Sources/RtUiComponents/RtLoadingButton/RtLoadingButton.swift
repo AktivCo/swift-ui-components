@@ -11,48 +11,61 @@ import SwiftUI
 public struct RtLoadingButton: View {
     private let action: () -> Void
     private let title: String
-
-    @Binding private var inProgress: Bool
+    private var state: RtContinueButtonState
 
     public init(action: @escaping () -> Void,
                 title: String,
-                inProgress: Binding<Bool>) {
+                state: RtContinueButtonState) {
         self.action = action
         self.title = title
-        self._inProgress = inProgress
+        self.state = state
     }
 
     @ViewBuilder
     private var buttonLabel: some View {
-        if inProgress {
+        switch state {
+        case .inProgress:
             RtLoadingIndicator(.small)
                 .padding(.vertical, 13)
-        } else {
+        case .ready, .disabled:
             Text(title)
                 .padding(.vertical, 15)
+        case .cooldown(let value):
+            Text("Подождите \(value)...")
+                .padding(.vertical, 15)
+        }
+    }
+
+    private var isDisabled: Bool {
+        switch self.state {
+        case .disabled, .cooldown:
+            return true
+        case .inProgress, .ready:
+            return false
         }
     }
 
     public var body: some View {
         Button {
-            if !inProgress {
+            if state == .ready {
                 action()
             }
         } label: {
             buttonLabel
         }
+        .disabled(isDisabled)
         .buttonStyle(RtRoundedFilledButtonStyle())
+        .animation(.easeOut(duration: 0.15), value: state)
     }
 }
 
 struct RtLoadingButton_Previews: PreviewProvider {
     static var previews: some View {
-        RtLoadingButton(action: {}, title: "Сгенерировать",
-                 inProgress: .constant(false))
-
-        RtLoadingButton(action: {}, title: "Сгенерировать",
-                 inProgress: .constant(true))
-        .previewDisplayName("In progress")
-
+        RtLoadingButton(action: {}, title: "Сгенерировать", state: .ready)
+            .previewDisplayName("Regular")
+        RtLoadingButton(action: {}, title: "Сгенерировать", state: .cooldown(3))
+            .previewDisplayName("In cooldown")
+        RtLoadingButton(action: {}, title: "Сгенерировать", state: .inProgress)
+            .previewDisplayName("In progress")
     }
 }

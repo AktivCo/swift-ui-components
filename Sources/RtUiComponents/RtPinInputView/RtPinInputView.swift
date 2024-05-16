@@ -11,7 +11,7 @@ import SwiftUI
 struct RtPinInputView: View {
     @EnvironmentObject private var model: RtPinInputModel
     @FocusState private var isPinFieldFocused: Bool
-    @State private var inProgress: Bool = false
+    @State private var buttonState: RtContinueButtonState = .ready
 
     private let defaultPinGetter: () -> Void
     private let onSubmit: (String) -> Void
@@ -70,11 +70,10 @@ struct RtPinInputView: View {
                 .foregroundColor(Color.RtColors.rtColorsSystemRed)
 
             Spacer()
-            RtLoadingButton(action: {
-                    onSubmit(model.pin)
-            }, title: "Продолжить",
-                     inProgress: $inProgress)
-            .disabled(model.pin.isEmpty || model.isContinueButtonDisabled)
+
+            RtLoadingButton(action: { onSubmit(model.pin) },
+                            title: "Продолжить",
+                            state: buttonState)
         }
         .padding(.bottom, UIDevice.isPhone ? 20 : 48)
         .background { Color.clear }
@@ -82,8 +81,24 @@ struct RtPinInputView: View {
             defaultPinGetter()
             isPinFieldFocused = true
         }
-        .onChange(of: model.inProgress) { newValue in
-            inProgress = newValue
+        .onAppear {
+            if model.buttonState == .ready {
+                buttonState = model.pin.isEmpty ? .disabled : .ready
+            } else {
+                buttonState = model.buttonState
+            }
+        }
+        .onChange(of: model.buttonState) { state in
+            if state == .ready {
+                buttonState = model.pin.isEmpty ? .disabled : .ready
+            } else {
+                buttonState = state
+            }
+        }
+        .onChange(of: model.pin) {
+            if [.ready, .disabled].contains(buttonState) {
+                buttonState = $0.isEmpty ? .disabled : .ready
+            }
         }
         .onDisappear {
             model.errorDescription = ""
@@ -104,9 +119,17 @@ struct RtPinInputView_Previews: PreviewProvider {
         VStack {
             RtPinInputView(defaultPinGetter: { },
                            onSubmit: { _ in })
-            .environmentObject(RtPinInputModel(pin: "12345678", isContinueButtonDisabled: true))
+            .environmentObject(RtPinInputModel(pin: "12345678", buttonState: .inProgress))
         }
         .background(Color.black.opacity(0.25))
-        .previewDisplayName("With disabled continue button")
+        .previewDisplayName("With progress loader")
+
+        VStack {
+            RtPinInputView(defaultPinGetter: { },
+                           onSubmit: { _ in })
+            .environmentObject(RtPinInputModel(pin: "12345678", buttonState: .cooldown(4)))
+        }
+        .background(Color.black.opacity(0.25))
+        .previewDisplayName("With cooldown timer")
     }
 }

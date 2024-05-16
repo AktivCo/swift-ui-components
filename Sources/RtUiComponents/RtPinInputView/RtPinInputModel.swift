@@ -11,17 +11,15 @@ import Foundation
 /// Object that handles possible states of RtPinInputView
 public class RtPinInputModel: ObservableObject {
     @Published public var errorDescription: String
-    @Published public var inProgress: Bool
     @Published public var pin: String
-    @Published public var isContinueButtonDisabled: Bool
+    @Published public var buttonState: RtContinueButtonState
 
     public init(errorDescription: String = "",
                 inProgress: Bool = false,
                 pin: String,
-                isContinueButtonDisabled: Bool = false) {
+                buttonState: RtContinueButtonState = .ready) {
         self.errorDescription = errorDescription
-        self.inProgress = inProgress
         self.pin = pin
-        self.isContinueButtonDisabled = isContinueButtonDisabled
+        self.buttonState = buttonState
     }
 }
