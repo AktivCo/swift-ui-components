@@ -13,11 +13,14 @@ struct RtPinInputView: View {
     @FocusState private var isPinFieldFocused: Bool
     @State private var buttonState: RtContinueButtonState = .ready
 
+    private let tokenType: RtTokenType
     private let defaultPinGetter: () -> Void
     private let onSubmit: (String) -> Void
 
-    init(defaultPinGetter: @escaping () -> Void,
+    init(tokenType: RtTokenType,
+         defaultPinGetter: @escaping () -> Void,
          onSubmit: @escaping (String) -> Void) {
+        self.tokenType = tokenType
         self.defaultPinGetter = defaultPinGetter
         self.onSubmit = onSubmit
     }
@@ -80,28 +83,27 @@ struct RtPinInputView: View {
         .onAppear {
             defaultPinGetter()
             isPinFieldFocused = true
+            buttonState = calculateButtonState()
         }
-        .onAppear {
-            if model.buttonState == .ready {
-                buttonState = model.pin.isEmpty ? .disabled : .ready
-            } else {
-                buttonState = model.buttonState
-            }
+        .onChange(of: model.buttonState) { _ in
+            buttonState = calculateButtonState()
         }
-        .onChange(of: model.buttonState) { state in
-            if state == .ready {
-                buttonState = model.pin.isEmpty ? .disabled : .ready
-            } else {
-                buttonState = state
-            }
-        }
-        .onChange(of: model.pin) {
-            if [.ready, .disabled].contains(buttonState) {
-                buttonState = $0.isEmpty ? .disabled : .ready
-            }
+        .onChange(of: model.pin) { _ in
+            buttonState = calculateButtonState()
         }
         .onDisappear {
             model.errorDescription = ""
+        }
+    }
+
+    private func calculateButtonState() -> RtContinueButtonState {
+        switch (model.buttonState, tokenType) {
+        case (.ready, _):
+            return model.pin.isEmpty ? .disabled : .ready
+        case (.cooldown, .usb):
+            return .ready
+        default:
+            return model.buttonState
         }
     }
 }
@@ -110,14 +112,14 @@ struct RtPinInputView: View {
 struct RtPinInputView_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            RtPinInputView(defaultPinGetter: { },
+            RtPinInputView(tokenType: .usb, defaultPinGetter: { },
                            onSubmit: { _ in })
             .environmentObject(RtPinInputModel(errorDescription: "Неверный PIN-код. Осталось попыток: 9", pin: "12345678"))
         }
         .background(Color.black.opacity(0.25))
 
         VStack {
-            RtPinInputView(defaultPinGetter: { },
+            RtPinInputView(tokenType: .usb, defaultPinGetter: { },
                            onSubmit: { _ in })
             .environmentObject(RtPinInputModel(pin: "12345678", buttonState: .inProgress))
         }
@@ -125,7 +127,7 @@ struct RtPinInputView_Previews: PreviewProvider {
         .previewDisplayName("With progress loader")
 
         VStack {
-            RtPinInputView(defaultPinGetter: { },
+            RtPinInputView(tokenType: .usb, defaultPinGetter: { },
                            onSubmit: { _ in })
             .environmentObject(RtPinInputModel(pin: "12345678", buttonState: .cooldown(4)))
         }

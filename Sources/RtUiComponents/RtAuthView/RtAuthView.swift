@@ -43,7 +43,7 @@ public struct RtAuthView: View {
 
             HStack {
                 if let tokenType {
-                    RtPinInputView {
+                    RtPinInputView(tokenType: tokenType) {
                         defaultPinGetter()
                     } onSubmit: { pin in
                         onSubmit(tokenType, pin)
