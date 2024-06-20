@@ -16,8 +16,6 @@ struct RtTokenChoiceView: View {
     }
 
     private func choiceCard(for card: RtTokenType) -> some View {
-        let cornerRadius = 12.0
-
         return HStack {
             VStack(alignment: .leading) {
                 Text(card.title)
@@ -31,14 +29,10 @@ struct RtTokenChoiceView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding([.leading, .bottom, .top], 12)
-
             Spacer()
             card.icon
-                .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
         }
         .frame(height: 128)
-        .background(Color.RtColors.rtSurfaceQuaternary)
-        .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
     }
 
     var body: some View {
@@ -51,10 +45,14 @@ struct RtTokenChoiceView: View {
 
             VStack(spacing: 12) {
                 ForEach(RtTokenType.allCases, id: \.self) { card in
-                    choiceCard(for: card)
-                        .onTapGesture {
-                            onSelect(card)
-                        }
+                    Button {
+                        onSelect(card)
+                    } label: {
+                        choiceCard(for: card)
+                    }
+                    .buttonStyle(RtBackgroundAnimatedButtonStyle(pressedColor: .RtColors.rtOtherSelected))
+                    .background(Color.RtColors.rtSurfaceQuaternary)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
             }
         }
