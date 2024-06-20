@@ -42,9 +42,10 @@ struct RtAlertView<Presenter>: View where Presenter: View {
                             alertModel = nil
                         } label: {
                             buttons[counter].title.text
+                                .multilineTextAlignment(.center)
                                 .frame(width: 270, height: 44)
                         }
-                        .multilineTextAlignment(.center)
+                        .buttonStyle(RtBackgroundAnimatedButtonStyle(pressedColor: Color.RtColors.rtOtherSelected))
                     }
                 }
             }

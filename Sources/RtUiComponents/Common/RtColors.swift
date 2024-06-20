@@ -32,5 +32,6 @@ public extension Color {
         public static let rtLabelSecondary = Color(UIColor(named: "rtLabelSecondary", in: .module, compatibleWith: nil)!)
         public static let rtLabelTertiary = Color(UIColor(named: "rtLabelTertiary", in: .module, compatibleWith: nil)!)
         public static let rtOtherDisabled = Color(UIColor(named: "rtOtherDisabled", in: .module, compatibleWith: nil)!)
+        public static let rtOtherSelected = Color(UIColor(named: "rtOtherSelected", in: .module, compatibleWith: nil)!)
     }
 }
