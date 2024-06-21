@@ -35,13 +35,13 @@ private struct RtSheetModifier: ViewModifier {
     }
 
     private var showedOpacity: CGFloat { colorScheme == .dark ? 0.6 : 0.2 }
-    private let delay = 0.5
+    private let duration = 0.24
     private let animation: Animation
     private let coordinateSpaceName = "RtSheetSpace"
 
     public init(sheetModel: RtSheetModel) {
         self.sheetModel = sheetModel
-        self.animation = Animation.easeInOut(duration: delay)
+        self.animation = Animation.easeOut(duration: duration)
     }
 
     private var indicator: some View {
@@ -132,7 +132,7 @@ private struct RtSheetModifier: ViewModifier {
             }
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
             parentViewDisabled = false
             sheetModel.content = nil
         }
