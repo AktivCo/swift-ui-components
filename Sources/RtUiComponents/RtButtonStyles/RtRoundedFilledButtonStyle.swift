@@ -10,23 +10,29 @@ import SwiftUI
 
 /// The special style for buttons
 public struct RtRoundedFilledButtonStyle: ButtonStyle {
-    public init(){}
+    @Environment(\.isEnabled) private var isEnabled: Bool
+    let isPressable: Bool
 
-    public func makeBody(configuration: ButtonStyle.Configuration) -> some View {
-        InnerBody(configuration: configuration)
+    public init(isPressable: Bool) {
+        self.isPressable = isPressable
     }
 
-    struct InnerBody: View {
-        let configuration: ButtonStyle.Configuration
-        @Environment(\.isEnabled) private var isEnabled: Bool
-        var body: some View {
-            configuration.label
-                .font(.headline)
-                .frame(height: 50)
-                .frame(maxWidth: .infinity)
-                .foregroundColor(isEnabled ? Color.RtColors.rtColorsOnPrimary : Color.RtColors.rtLabelTertiary)
-                .background(isEnabled ? Color.RtColors.rtColorsPrimary100 : Color.RtColors.rtOtherDisabled)
-                .cornerRadius(12)
-        }
+    public func makeBody(configuration: ButtonStyle.Configuration) -> some View {
+        configuration.label
+            .font(.headline)
+            .frame(height: 50)
+            .frame(maxWidth: .infinity)
+            .foregroundColor(isEnabled ? Color.RtColors.rtColorsOnPrimary : Color.RtColors.rtLabelTertiary)
+            .background(
+                Group {
+                    if isEnabled {
+                        configuration.isPressed && isPressable ?
+                        Color.RtColors.rtColorsPrimary80 : Color.RtColors.rtColorsPrimary100
+                    } else {
+                        Color.RtColors.rtOtherDisabled
+                    }
+                })
+            .animation(.easeOut(duration: configuration.isPressed ?  0.001 : 0.25), value: configuration.isPressed)
+            .cornerRadius(12)
     }
 }

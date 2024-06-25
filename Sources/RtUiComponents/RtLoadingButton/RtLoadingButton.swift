@@ -45,16 +45,18 @@ public struct RtLoadingButton: View {
         }
     }
 
+    private var isPressable: Bool { state == .ready }
+
     public var body: some View {
         Button {
-            if state == .ready {
+            if isPressable {
                 action()
             }
         } label: {
             buttonLabel
         }
         .disabled(isDisabled)
-        .buttonStyle(RtRoundedFilledButtonStyle())
+        .buttonStyle(RtRoundedFilledButtonStyle(isPressable: isPressable))
         .animation(.easeOut(duration: 0.15), value: state)
     }
 }
