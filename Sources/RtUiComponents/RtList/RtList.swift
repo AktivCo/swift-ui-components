@@ -15,91 +15,118 @@ private struct ListItem<Item: Identifiable, ItemView: View>: View {
     let contentBuilder: (Item, Binding<Bool>) -> ItemView
 
     private let maxTranslation = -80.0
-    private let delay = 0.240
+    private let delay = 0.24
+    private let animation: Animation
 
     @State private var offset = 0.0
     @State private var contentSize: CGSize = .zero
-    @State private var startToClose: Bool = false
+    @State private var startToDelete: Bool = false
+
+    init(item: Item, contentBuilder: @escaping (Item, Binding<Bool>) -> ItemView) {
+        self.item = item
+        self.contentBuilder = contentBuilder
+        self.animation = .easeInOut(duration: delay)
+    }
 
     private var buttonWidth: CGFloat {
-        startToClose ? contentSize.width : 72
+        startToDelete ? contentSize.width : 72
+    }
+
+    private var buttonOffset: CGFloat {
+        8 + buttonWidth + offset
     }
 
     private var itemHeight: CGFloat {
-        startToClose ? 0 : contentSize.height
+        startToDelete ? 0 : contentSize.height
     }
 
     private var opacity: CGFloat {
-        startToClose ? 0.3 : 1
+        startToDelete ? 0.3 : 1
     }
 
     private var listSpacing: CGFloat {
-        startToClose ? 0 : 12
+        startToDelete ? 0 : 12
     }
 
     var deleteButton: some View {
         Button {
-            withAnimation(.easeInOut(duration: delay)) {
-                startToClose.toggle()
+            withAnimation(animation) {
+                startToDelete.toggle()
                 offset = -contentSize.width
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                 model.onDeleteCallback?(item)
             }
         } label: {
-            VStack {
-                Image(systemName: "trash.fill")
-                    .foregroundStyle(Color.RtColors.rtColorsOnPrimary)
-                    .frame(maxWidth: buttonWidth, maxHeight: itemHeight)
-            }
-            .background(Color.RtColors.rtColorsSystemRed)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            Image(systemName: "trash.fill")
+                .frame(maxWidth: 20, maxHeight: 72)
+                .foregroundStyle(Color.RtColors.rtColorsOnPrimary)
+                .frame(maxWidth: buttonWidth, maxHeight: itemHeight)
+                .background(Color.RtColors.rtColorsSystemRed)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
 
     var body: some View {
-        ZStack(alignment: .topTrailing) {
-            deleteButton
-                .frame(maxHeight: itemHeight)
-            contentBuilder(item, $startToClose)
-                .rtSizeReader(size: $contentSize)
-                .onTapGesture {
-                    if offset == 0.0 {
-                        model.onSelectCallback?(item)
-                    } else {
-                        withAnimation(.easeInOut(duration: delay)) {
-                            offset = 0.0
-                        }
-                    }
+        Button {
+            if offset == 0.0 {
+                model.idForDelete = nil
+                model.onSelectCallback?(item)
+            } else {
+                withAnimation(animation) {
+                    offset = 0.0
                 }
-                .offset(x: offset)
-                .gesture(
-                    DragGesture(minimumDistance: 8, coordinateSpace: .local)
-                        .onChanged {
-                            let translation = $0.translation.width
-                            withAnimation {
-                                if translation < 0 {
-                                    offset = max(translation, maxTranslation)
-                                } else {
-                                    offset = 0
+            }
+        } label: {
+            ZStack(alignment: .topTrailing) {
+                deleteButton
+                    .frame(maxHeight: itemHeight)
+                    .offset(x: buttonOffset)
+                contentBuilder(item, $startToDelete)
+                    .rtSizeReader(size: $contentSize)
+                    .offset(x: offset)
+                    .gesture(
+                        DragGesture(minimumDistance: 8, coordinateSpace: .local)
+                            .onChanged { pos in
+                                model.idForDelete = item.id
+                                let translation = pos.translation.width
+                                withAnimation(animation) {
+                                    if translation < 0 {
+                                        offset = max(translation, maxTranslation)
+                                    }
                                 }
                             }
-                        }
-                        .onEnded {
-                            let translation = $0.translation.width
-                            withAnimation {
-                                if translation < maxTranslation / 2 {
-                                    offset = maxTranslation
-                                } else {
-                                    offset = 0
+                            .onEnded {
+                                let translation = $0.translation.width
+                                withAnimation(animation) {
+                                    if translation < maxTranslation / 2 {
+                                        offset = maxTranslation
+                                    } else {
+                                        offset = 0
+                                    }
                                 }
                             }
-                        }
-                )
+                    )
+            }
+            .buttonStyle(RtBackgroundAnimatedButtonStyle(pressedColor: .RtColors.rtOtherSelected))
         }
         .frame(maxHeight: itemHeight)
         .opacity(opacity)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
         .padding(.bottom, model.items.last?.id == item.id ? 0 : listSpacing)
+        .onDisappear {
+            model.idForDelete = nil
+            offset = 0
+        }
+        .onChange(of: model.idForDelete) {
+            guard $0 != item.id else {
+                return
+            }
+
+            withAnimation(animation) {
+                offset = 0
+            }
+        }
     }
 }
 
@@ -131,7 +158,7 @@ struct RtList_Previews: PreviewProvider {
 
     private struct UserListItem: View {
         let user: BankUserInfo
-        @Binding var startToClose: Bool
+        @Binding var startToDelete: Bool
 
         var body: some View {
                 HStack {
@@ -147,7 +174,7 @@ struct RtList_Previews: PreviewProvider {
                 .padding(.all, 12)
                 Spacer()
             }
-            .frame(maxHeight: startToClose ? 0 : 152)
+            .frame(maxHeight: startToDelete ? 0 : 152)
             .background(Color.RtColors.rtColorsSecondary)
             .clipShape(RoundedRectangle(cornerRadius: 12))
         }
@@ -168,7 +195,7 @@ struct RtList_Previews: PreviewProvider {
         items: [.init(fullname: "Иванов Михаил Романович", title: "Дизайнер"),
                 .init(fullname: "Иванов Михаил Романович", title: "Дизайнер"),
                 .init(fullname: "Иванов Михаил Романович", title: "Дизайнер")],
-        contentBuilder: { user, startToClose in UserListItem(user: user, startToClose: startToClose) },
+        contentBuilder: { user, startToDelete in UserListItem(user: user, startToDelete: startToDelete) },
         onSelect: {_ in},
         onDelete: {_ in})
 
