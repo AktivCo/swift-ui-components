@@ -9,42 +9,40 @@ import SwiftUI
 
 
 /// View for notifying the user to begin interacting with the VCR
-public struct RtVcrIndicator: View {
-    let vcrName: String
+struct RtVcrIndicator<Presenter>: View where Presenter: View {
+    @Binding var vcrName: String?
 
-    public var body: some View {
-        VStack(spacing: 0) {
-            RtLoadingIndicator(.big)
-                .padding(.bottom, 16)
-            Text("Продолжите работу на \(vcrName)")
-                .font(.system(size: 15))
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-                .frame(maxWidth: 146)
-                .foregroundStyle(Color.RtColors.rtAlertLabelSecondary)
+    let presentationView: Presenter
+
+    var body: some View {
+        ZStack {
+            presentationView
+                .disabled(vcrName != nil)
+            Color.RtColors.rtIosElementsAlertOverlay
+                .edgesIgnoringSafeArea(.all)
+                .opacity(vcrName == nil ? 0 : 1)
+                .animation(.easeOut(duration: 0.24), value: vcrName == nil)
+            if vcrName != nil {
+                VStack(spacing: 0) {
+                    RtLoadingIndicator(.big)
+                        .padding(.bottom, 16)
+                    Text("Продолжите работу на \(vcrName ?? "")")
+                        .font(.system(size: 15))
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .frame(maxWidth: 146)
+                        .foregroundStyle(Color.RtColors.rtAlertLabelSecondary)
+                }
+                .padding(.top, 24)
+                .padding(.bottom, 20)
+                .frame(width: 238, height: 148)
+                .background { Color.RtColors.rtSurfaceTertiary }
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .transition(.scale(scale: 0.75).combined(with: .opacity).animation(.easeOut(duration: 0.24)))
+                .zIndex(.greatestFiniteMagnitude)
+            }
         }
-        .padding(.top, 24)
-        .padding(.bottom, 20)
-        .frame(width: 238, height: 148)
-        .background { Color.RtColors.rtSurfaceTertiary }
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .edgesIgnoringSafeArea(.all)
     }
 }
-
-struct RtVcrIndicator_Previews: PreviewProvider {
-    static var previews: some View {
-        ZStack {
-            Color.secondary.edgesIgnoringSafeArea(.all)
-            RtVcrIndicator(vcrName: "Михаил’s iPhone")
-        }
-        .previewDisplayName("RtVcrIndicator")
-
-        ZStack {
-            Color.secondary.edgesIgnoringSafeArea(.all)
-            RtVcrIndicator(vcrName: "Михаил’s iPhone")
-        }
-        .previewDisplayName("RtVcrIndicator Dark")
-        .preferredColorScheme(.dark)
-    }
-}
-
