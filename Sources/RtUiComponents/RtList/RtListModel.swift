@@ -20,13 +20,15 @@ public class RtListModel<Item: Identifiable, ItemView: View>: ObservableObject {
     @Published public var items: [Item]
     @Published public var idForDelete: Item.ID?
 
-    let contentBuilder: (Item, Binding<Bool>) -> ItemView
+    let contentBuilder: (Item, Binding<Bool>, Binding<Bool>) -> ItemView
+    let listPadding: CGFloat
     public var onSelectCallback: ((Item) -> Void)?
     public var onDeleteCallback: ((Item) -> Void)?
 
-    public init(items: [Item] = [], contentBuilder: @escaping (Item, Binding<Bool>) -> ItemView,
+    public init(items: [Item] = [], listPadding: CGFloat = 12, contentBuilder: @escaping (Item, Binding<Bool>, Binding<Bool>) -> ItemView,
                 onSelect: @escaping (Item) -> Void, onDelete: @escaping (Item) -> Void) {
         self.items = items
+        self.listPadding = listPadding
         self.contentBuilder = contentBuilder
         self.onSelectCallback = onSelect
         self.onDeleteCallback = onDelete

@@ -12,7 +12,8 @@ private struct ListItem<Item: Identifiable, ItemView: View>: View {
     @EnvironmentObject private var model: RtListModel<Item, ItemView>
 
     let item: Item
-    let contentBuilder: (Item, Binding<Bool>) -> ItemView
+    let contentBuilder: (Item, Binding<Bool>, Binding<Bool>) -> ItemView
+    let listPadding: CGFloat
 
     private let maxTranslation = -80.0
     private let delay = 0.24
@@ -21,11 +22,13 @@ private struct ListItem<Item: Identifiable, ItemView: View>: View {
     @State private var offset = 0.0
     @State private var contentSize: CGSize = .zero
     @State private var startToDelete: Bool = false
+    @State private var isPressed: Bool = false
 
-    init(item: Item, contentBuilder: @escaping (Item, Binding<Bool>) -> ItemView) {
+    init(item: Item, listPadding: CGFloat = 12, contentBuilder: @escaping (Item, Binding<Bool>, Binding<Bool>) -> ItemView) {
         self.item = item
         self.contentBuilder = contentBuilder
         self.animation = .easeInOut(duration: delay)
+        self.listPadding = listPadding
     }
 
     private var buttonWidth: CGFloat {
@@ -45,7 +48,7 @@ private struct ListItem<Item: Identifiable, ItemView: View>: View {
     }
 
     private var listSpacing: CGFloat {
-        startToDelete ? 0 : 12
+        startToDelete ? 0 : listPadding
     }
 
     var deleteButton: some View {
@@ -82,7 +85,7 @@ private struct ListItem<Item: Identifiable, ItemView: View>: View {
                 deleteButton
                     .frame(maxHeight: itemHeight)
                     .offset(x: buttonOffset)
-                contentBuilder(item, $startToDelete)
+                contentBuilder(item, $startToDelete, $isPressed)
                     .rtSizeReader(size: $contentSize)
                     .offset(x: offset)
                     .gesture(
@@ -108,8 +111,8 @@ private struct ListItem<Item: Identifiable, ItemView: View>: View {
                             }
                     )
             }
-            .buttonStyle(RtBackgroundAnimatedButtonStyle(pressedColor: .RtColors.rtOtherSelected))
         }
+        .buttonStyle(RtIsPressedButtonStyle(isPressed: $isPressed))
         .frame(maxHeight: itemHeight)
         .opacity(opacity)
         .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -142,7 +145,7 @@ public struct RtList<Item: Identifiable, ItemView: View>: View {
     public var body: some View {
         VStack(spacing: 0) {
             ForEach(model.items, id: \.id) { item in
-                ListItem(item: item, contentBuilder: model.contentBuilder)
+                ListItem(item: item, listPadding: model.listPadding, contentBuilder: model.contentBuilder)
             }
         }
         .environmentObject(model)
@@ -195,7 +198,7 @@ struct RtList_Previews: PreviewProvider {
         items: [.init(fullname: "Иванов Михаил Романович", title: "Дизайнер"),
                 .init(fullname: "Иванов Михаил Романович", title: "Дизайнер"),
                 .init(fullname: "Иванов Михаил Романович", title: "Дизайнер")],
-        contentBuilder: { user, startToDelete in UserListItem(user: user, startToDelete: startToDelete) },
+        contentBuilder: { user, startToDelete, _ in UserListItem(user: user, startToDelete: startToDelete) },
         onSelect: {_ in},
         onDelete: {_ in})
 
