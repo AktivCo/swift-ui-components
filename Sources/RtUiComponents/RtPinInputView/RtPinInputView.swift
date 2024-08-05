@@ -50,6 +50,7 @@ struct RtPinInputView: View {
                 .focused($isPinFieldFocused)
                 .frame(height: 44)
                 .textFieldStyle(PlainTextFieldStyle())
+                .tint(.RtColors.rtColorsSecondary)
                 .padding(.horizontal, 12)
 
                 if !model.pin.isEmpty {
