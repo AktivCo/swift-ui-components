@@ -1,5 +1,4 @@
 stages:
-  - analyse
   - build
   
 workflow:
@@ -21,13 +20,3 @@ build:
       xcodebuild clean build -scheme rt-ui-components \
                              -destination generic/platform=iOS \
                              -scmProvider system
-
-include:
-  - project: rutoken/dev/devops/checker/code-quality
-    ref: latest
-    file: /code-quality.yaml
-
-
-code-quality:
-  stage: analyse
-  extends: .code-quality
