@@ -199,8 +199,8 @@ struct RtList_Previews: PreviewProvider {
                 .init(fullname: "Иванов Михаил Романович", title: "Дизайнер"),
                 .init(fullname: "Иванов Михаил Романович", title: "Дизайнер")],
         contentBuilder: { user, startToDelete, _ in UserListItem(user: user, startToDelete: startToDelete) },
-        onSelect: {_ in},
-        onDelete: {_ in})
+        onSelect: { _ in },
+        onDelete: { _ in })
 
     static var previews: some View {
         VStack {

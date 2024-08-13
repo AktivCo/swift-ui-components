@@ -32,7 +32,7 @@ public struct RtRoundedFilledButtonStyle: ButtonStyle {
                         Color.RtColors.rtOtherDisabled
                     }
                 })
-            .animation(.easeOut(duration: configuration.isPressed ?  0.001 : 0.25), value: configuration.isPressed)
+            .animation(.easeOut(duration: configuration.isPressed ? 0.001 : 0.25), value: configuration.isPressed)
             .cornerRadius(12)
     }
 }

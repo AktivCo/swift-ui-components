@@ -22,6 +22,6 @@ public struct RtBackgroundAnimatedButtonStyle: ButtonStyle {
         configuration.label
             .contentShape(Rectangle())
             .background(configuration.isPressed ? pressedColor : unpressedColor)
-            .animation(.easeOut(duration: configuration.isPressed ?  0.001 : 0.2), value: configuration.isPressed)
+            .animation(.easeOut(duration: configuration.isPressed ? 0.001 : 0.2), value: configuration.isPressed)
     }
 }

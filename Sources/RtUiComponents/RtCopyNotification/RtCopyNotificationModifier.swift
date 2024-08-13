@@ -134,7 +134,7 @@ private struct ContentView: View {
                         }
                     }
                 } label: {
-                    Label( title: { Text(tab.rawValue) }, icon: { Image(systemName: "cat")})
+                    Label(title: { Text(tab.rawValue) }, icon: { Image(systemName: "cat") })
                 }
             }
             .listStyle(.sidebar)

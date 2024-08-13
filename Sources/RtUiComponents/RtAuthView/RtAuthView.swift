@@ -10,7 +10,7 @@ import SwiftUI
 
 /// View that combines the transition from selecting a type of interaction with token to PIN code input
 /// - Parameters:
-///   - defaultPinGetter: Produces default PIN code value  if it's available
+///   - defaultPinGetter: Produces default PIN code value if it's available
 ///   - onSubmit: Callback for PinInputView
 ///   - onCancel: Callback for "Cancel" button
 public struct RtAuthView: View {
