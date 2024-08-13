@@ -4,7 +4,7 @@
 RtUiComponents is a library of common Swift UI Components, that are frequently used in Rutoken IOS Apps
 
 ## Requirements
-This library supports IOS 16 and newer and swift-tools 5.7 and newer
+This library supports IOS 16 and newer and swift-tools 5.9 and newer
 
 ## Installation
 **Swift Package Manager**
