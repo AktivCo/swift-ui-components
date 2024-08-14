@@ -54,6 +54,10 @@ struct RtTokenChoiceView: View {
                     .background(Color.RtColors.rtSurfaceQuaternary)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
+                Text("При попытке подключения смарт-карты через считыватель для смарт-карт, выберите «Рутокен с USB»")
+                    .font(.footnote)
+                    .foregroundStyle(Color.RtColors.rtLabelSecondary)
+                    .multilineTextAlignment(.center)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
