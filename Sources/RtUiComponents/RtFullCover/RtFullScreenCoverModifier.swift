@@ -10,16 +10,36 @@ import SwiftUI
 
 public extension View {
     /// Presents a full cover view based on RtFullScreenCoverModel
-    /// - Parameter model: Model that determines parameters of the full cover view
-    func rtFullScreenCover(_ model: RtFullScreenCoverModel) -> some View {
-        modifier(RtFullScreenCoverModifier(model: model))
+    /// - Parameters:
+    ///   - isPresented: Binding that determines if the full cover view is presented
+    ///   - direction: The direction from which the full cover view will appear
+    ///   - content: The content closure that provides the view to be displayed in full screen
+    func rtFullScreenCover(
+        direction: RtFullScreenCoverDirection = .right,
+        isPresented: Binding<Bool>,
+        onDismiss: (() -> Void)? = nil,
+        content: @escaping () -> AnyView
+    ) -> some View {
+        modifier(
+            RtFullScreenCoverModifier(
+                isPresented: isPresented,
+                direction: direction,
+                onDismiss: onDismiss,
+                content: content
+            )
+        )
     }
 }
 
 private struct RtFullScreenCoverModifier: ViewModifier {
-    @ObservedObject private var model: RtFullScreenCoverModel
+    @Binding private var isPresented: Bool
+    private let direction: RtFullScreenCoverDirection
+    private let onDismiss: (() -> Void)?
 
-    @State private var coverOffset: CGFloat = 0
+    private let contentBuilder: () -> AnyView
+    @State private var content: AnyView
+
+    @State private var coverOffset: CGFloat
     @State private var contentOffset: CGFloat = 0
 
     @State private var contentShiftOffset: CGFloat = 0
@@ -31,10 +51,21 @@ private struct RtFullScreenCoverModifier: ViewModifier {
     private let duration = 0.24
     private let animation: Animation
 
-    public init(model: RtFullScreenCoverModel) {
-        self.model = model
-        self.animation = Animation.easeOut(duration: duration)
-    }
+    public init(
+        isPresented: Binding<Bool>,
+        direction: RtFullScreenCoverDirection,
+        onDismiss: (() -> Void)?,
+        content: @escaping () -> AnyView) {
+            _isPresented = isPresented
+            self.direction = direction
+            self.onDismiss = onDismiss
+
+            self.contentBuilder = content
+            self.content = AnyView(content())
+
+            self.animation = Animation.easeOut(duration: duration)
+            self.coverOffset = isPresented.wrappedValue ? 0 : UIScreen.main.bounds.width
+        }
 
     func body(content: Content) -> some View {
         ZStack(alignment: .top) {
@@ -43,7 +74,7 @@ private struct RtFullScreenCoverModifier: ViewModifier {
                 .offset(x: contentOffset)
                 .allowsHitTesting(!parentViewDisabled)
 
-            model.content
+            self.content
                 .frame(maxWidth: contentSize.width,
                        maxHeight: contentSize.height)
                 .background { Color.RtColors.rtSurfaceTertiary }
@@ -51,8 +82,8 @@ private struct RtFullScreenCoverModifier: ViewModifier {
                 .offset(x: coverOffset)
         }
         .ignoresSafeArea()
-        .onChange(of: model.isPresented) {
-            switch model.direction {
+        .onChange(of: isPresented) {
+            switch direction {
             case .right:
                 coverHideOffset = contentSize.width
                 contentShiftOffset = -contentSize.width / 4
@@ -65,9 +96,10 @@ private struct RtFullScreenCoverModifier: ViewModifier {
     }
 
     private func open() {
+        content = AnyView(contentBuilder())
         parentViewDisabled = true
-
         coverOffset = coverHideOffset
+
         withAnimation(animation) {
             contentOffset = contentShiftOffset
             coverOffset = 0
@@ -83,17 +115,19 @@ private struct RtFullScreenCoverModifier: ViewModifier {
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
+            content = AnyView(EmptyView())
             parentViewDisabled = false
-            model.content = nil
+            onDismiss?()
         }
 
         UIApplication.endEditing()
     }
 }
 
-private struct AnotherView: View {
-    @StateObject var model = RtFullScreenCoverModel(direction: .left,
-                                                    content: AnyView(EmptyView()))
+private struct AnotherTestView: View {
+    @State private var content = AnyView(EmptyView())
+    @State var isPresented: Bool = false
+
     @State var isRight: Bool = false
     static private var innerViewCounter = 1
 
@@ -102,19 +136,18 @@ private struct AnotherView: View {
     var body: some View {
         VStack {
             Spacer()
-            Text("Another view \(AnotherView.innerViewCounter)")
+            Text("Another view \(AnotherTestView.innerViewCounter)")
             Toggle(isOn: $isRight, label: {
                 Text("Inner cover direction is from \(isRight ? "right" : "left")")
                     .foregroundColor(Color.RtColors.rtSurfaceTertiary)
             })
             Button("show inner cover sheet") {
-                model.direction = isRight ? .right : .left
-                model.content = AnyView(AnotherView(onDismiss: {
-                    model.isPresented = false
-                    AnotherView.innerViewCounter -= 1
+                content = AnyView(AnotherTestView(onDismiss: {
+                    isPresented = false
+                    AnotherTestView.innerViewCounter -= 1
                 }))
-                AnotherView.innerViewCounter += 1
-                model.isPresented = true
+                AnotherTestView.innerViewCounter += 1
+                isPresented = true
             }
             .padding()
             .foregroundColor(Color.RtColors.rtSurfaceTertiary)
@@ -133,7 +166,9 @@ private struct AnotherView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: 200)
-        .rtFullScreenCover(model)
+        .rtFullScreenCover(direction: isRight ? .right : .left, isPresented: $isPresented) {
+            content
+        }
         .background {
             Color.gray
         }
@@ -172,11 +207,12 @@ private struct TestView: View {
     }
 }
 
-private struct RtFullScreenCoverModifierView: View {
+private struct MainTestView: View {
     @State var text = "Some error"
     @State var isRight: Bool = false
-    @StateObject var model = RtFullScreenCoverModel(direction: .left,
-                                                    content: AnyView(EmptyView()))
+
+    @State var isPresented: Bool = false
+    @State private var content: AnyView = AnyView(EmptyView())
 
     var body: some View {
         TabView {
@@ -189,21 +225,19 @@ private struct RtFullScreenCoverModifierView: View {
 
                 Spacer().frame(height: 50)
                 Button("show PinInputView") {
-                    model.direction = isRight ? .right : .left
-                    model.content = AnyView(TestView(
+                    content = AnyView(TestView(
                         errorMessage: $text,
-                        onDismiss: { model.isPresented = false }
+                        onDismiss: { isPresented = false }
                     ))
-                    model.isPresented = true
+                    isPresented = true
                 }
                 .padding()
                 .background(Color.RtColors.rtColorsSystemBlue)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 Spacer().frame(height: 50)
                 Button("show another sheet") {
-                    model.direction = isRight ? .right : .left
-                    model.content = AnyView(AnotherView(onDismiss: { model.isPresented = false }))
-                    model.isPresented = true
+                    content = AnyView(AnotherTestView(onDismiss: { isPresented = false }))
+                    isPresented = true
                 }
                 .padding()
                 .background(Color.RtColors.rtColorsSystemBlue)
@@ -219,12 +253,14 @@ private struct RtFullScreenCoverModifierView: View {
             }
         }
         .accentColor(Color.RtColors.rtSurfaceTertiary)
-        .rtFullScreenCover(model)
+        .rtFullScreenCover(direction: isRight ? .right : .left, isPresented: $isPresented) {
+            content
+        }
     }
 }
 
 struct RtFullScreenCoverModifier_Previews: PreviewProvider {
     static var previews: some View {
-        RtFullScreenCoverModifierView()
+        MainTestView()
     }
 }
