@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 
 
 /// Enum of available sheet sizes
@@ -19,7 +20,7 @@ public enum RtSheetSize {
         case .smallPhone:
             return 391
         case .largePhone:
-            return 786
+            return UIScreen.main.bounds.height - 12 - (UIApplication.statusBarHeight ?? 0)
         case .ipad(_, let height):
             return height
         }
