@@ -8,6 +8,11 @@
 import SwiftUI
 
 
+/// Protocol describing the minimum required object to be displayed in the RtList
+public protocol RtListItem: Identifiable {
+    var isDisabled: Bool { get }
+}
+
 /// The model for managing the state of the list
 /// - Parameters:
 ///   - items: list of handling items for displaying
@@ -16,7 +21,7 @@ import SwiftUI
 ///   - contentBuilder: Per-Item content builder
 ///   - onSelectCallback: Callback for handling press-to-choose action
 ///   - onDeleteCallback: Callback for handling delete action
-public class RtListModel<Item: Identifiable, ItemView: View>: ObservableObject {
+public class RtListModel<Item: RtListItem, ItemView: View>: ObservableObject {
     @Published public var items: [Item]
     @Published public var idForDelete: Item.ID?
 

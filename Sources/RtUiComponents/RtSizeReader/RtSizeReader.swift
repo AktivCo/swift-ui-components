@@ -31,7 +31,9 @@ private struct SizeReaderModifier: ViewModifier {
                 }
             )
             .onPreferenceChange(SizePreferenceKey.self) { preferences in
-                self.size = preferences
+                DispatchQueue.main.async {
+                    self.size = preferences
+                }
             }
     }
 }

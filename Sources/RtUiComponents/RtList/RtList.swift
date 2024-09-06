@@ -8,7 +8,7 @@
 import SwiftUI
 
 
-private struct ListItem<Item: Identifiable, ItemView: View>: View {
+private struct ListItem<Item: RtListItem, ItemView: View>: View {
     @EnvironmentObject private var model: RtListModel<Item, ItemView>
 
     let item: Item
@@ -23,12 +23,14 @@ private struct ListItem<Item: Identifiable, ItemView: View>: View {
     @State private var contentSize: CGSize = .zero
     @State private var startToDelete: Bool = false
     @State private var isPressed: Bool = false
+    @State private var isDisabled: Bool
 
     init(item: Item, listPadding: CGFloat = 12, contentBuilder: @escaping (Item, Binding<Bool>, Binding<Bool>) -> ItemView) {
         self.item = item
         self.contentBuilder = contentBuilder
         self.animation = .easeInOut(duration: delay)
         self.listPadding = listPadding
+        self._isDisabled = State(initialValue: item.isDisabled)
     }
 
     private var buttonWidth: CGFloat {
@@ -71,55 +73,59 @@ private struct ListItem<Item: Identifiable, ItemView: View>: View {
     }
 
     var body: some View {
-        Button {
-            if offset == 0.0 {
-                model.idForDelete = nil
-                model.onSelectCallback?(item)
-            } else {
-                withAnimation(animation) {
-                    offset = 0.0
+        ZStack(alignment: .topTrailing) {
+            deleteButton
+                .frame(maxHeight: itemHeight)
+                .offset(x: buttonOffset)
+            Button {
+                if offset == 0.0 {
+                    model.idForDelete = nil
+                    model.onSelectCallback?(item)
+                } else {
+                    withAnimation(animation) {
+                        offset = 0.0
+                    }
                 }
-            }
-        } label: {
-            ZStack(alignment: .topTrailing) {
-                deleteButton
-                    .frame(maxHeight: itemHeight)
-                    .offset(x: buttonOffset)
+            } label: {
                 contentBuilder(item, $startToDelete, $isPressed)
                     .rtSizeReader(size: $contentSize)
-                    .offset(x: offset)
-                    .gesture(
-                        DragGesture(minimumDistance: 8, coordinateSpace: .local)
-                            .onChanged { pos in
-                                model.idForDelete = item.id
-                                let translation = pos.translation.width
-                                withAnimation(animation) {
-                                    if translation < 0 {
-                                        offset = max(translation, maxTranslation)
-                                    }
-                                }
-                            }
-                            .onEnded {
-                                let translation = $0.translation.width
-                                withAnimation(animation) {
-                                    if translation < maxTranslation / 2 {
-                                        offset = maxTranslation
-                                    } else {
-                                        offset = 0
-                                    }
-                                }
-                            }
-                    )
             }
+            .buttonStyle(RtIsPressedButtonStyle(isPressed: $isPressed))
+            .disabled(isDisabled)
+            .offset(x: offset)
         }
-        .buttonStyle(RtIsPressedButtonStyle(isPressed: $isPressed))
         .frame(maxHeight: itemHeight)
         .opacity(opacity)
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .padding(.bottom, model.items.last?.id == item.id ? 0 : listSpacing)
+        .highPriorityGesture(
+            DragGesture(minimumDistance: 8, coordinateSpace: .local)
+                .onChanged { pos in
+                    model.idForDelete = item.id
+                    let translation = pos.translation.width
+                    withAnimation(animation) {
+                        if translation < 0 {
+                            offset = max(translation, maxTranslation)
+                        }
+                    }
+                }
+                .onEnded {
+                    let translation = $0.translation.width
+                    withAnimation(animation) {
+                        if translation < maxTranslation / 2 {
+                            offset = maxTranslation
+                        } else {
+                            offset = 0
+                        }
+                    }
+                }
+        )
         .onDisappear {
             model.idForDelete = nil
             offset = 0
+        }
+        .onChange(of: item.isDisabled) {
+            isDisabled = $0
         }
         .onChange(of: model.idForDelete) {
             guard $0 != item.id else {
@@ -135,7 +141,7 @@ private struct ListItem<Item: Identifiable, ItemView: View>: View {
 
 /// Presents the list based on RtListModel
 /// - Parameter model: Model that determines parameters of the list
-public struct RtList<Item: Identifiable, ItemView: View>: View {
+public struct RtList<Item: RtListItem, ItemView: View>: View {
     @ObservedObject var model: RtListModel<Item, ItemView>
 
     public init(listModel: RtListModel<Item, ItemView>) {
@@ -153,15 +159,20 @@ public struct RtList<Item: Identifiable, ItemView: View>: View {
 }
 
 struct RtList_Previews: PreviewProvider {
-    private struct BankUserInfo: Identifiable {
+    private struct BankUserInfo: RtListItem {
         let id = UUID().uuidString
         let fullname: String
         let title: String
+        let disabled: Bool
+        var isDisabled: Bool {
+            disabled
+        }
     }
 
     private struct UserListItem: View {
         let user: BankUserInfo
         @Binding var startToDelete: Bool
+        @Binding var isPressed: Bool
 
         var body: some View {
                 HStack {
@@ -178,7 +189,7 @@ struct RtList_Previews: PreviewProvider {
                 Spacer()
             }
             .frame(maxHeight: startToDelete ? 0 : 152)
-            .background(Color.RtColors.rtColorsSecondary)
+            .background(isPressed ? Color.RtColors.rtOtherSelected : Color.RtColors.rtSurfaceSecondary)
             .clipShape(RoundedRectangle(cornerRadius: 12))
         }
 
@@ -195,10 +206,10 @@ struct RtList_Previews: PreviewProvider {
     }
 
     static private let model = RtListModel<BankUserInfo, UserListItem>(
-        items: [.init(fullname: "Иванов Михаил Романович", title: "Дизайнер"),
-                .init(fullname: "Иванов Михаил Романович", title: "Дизайнер"),
-                .init(fullname: "Иванов Михаил Романович", title: "Дизайнер")],
-        contentBuilder: { user, startToDelete, _ in UserListItem(user: user, startToDelete: startToDelete) },
+        items: [.init(fullname: "Иванов Никита Романович", title: "Дизайнер", disabled: false),
+                .init(fullname: "Иванов Валера Романович", title: "Дизайнер", disabled: false),
+                .init(fullname: "Иванов Михаил Романович", title: "Дизайнер", disabled: true)],
+        contentBuilder: { user, startToDelete, isPressed in UserListItem(user: user, startToDelete: startToDelete, isPressed: isPressed) },
         onSelect: { _ in },
         onDelete: { _ in })
 
