@@ -11,7 +11,7 @@ import SwiftUI
 struct RtPinInputView: View {
     @EnvironmentObject private var model: RtPinInputModel
     @FocusState private var isPinFieldFocused: Bool
-    @State private var buttonState: RtContinueButtonState = .ready
+    @State private var buttonState: RtContinueButtonState = .disabled
 
     private let tokenType: RtTokenType
     private let defaultPinGetter: () -> Void
