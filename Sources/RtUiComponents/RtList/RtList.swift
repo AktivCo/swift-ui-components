@@ -23,14 +23,12 @@ private struct ListItem<Item: RtListItem, ItemView: View>: View {
     @State private var contentSize: CGSize = .zero
     @State private var startToDelete: Bool = false
     @State private var isPressed: Bool = false
-    @State private var isDisabled: Bool
 
     init(item: Item, listPadding: CGFloat = 12, contentBuilder: @escaping (Item, Binding<Bool>, Binding<Bool>) -> ItemView) {
         self.item = item
         self.contentBuilder = contentBuilder
         self.animation = .easeInOut(duration: delay)
         self.listPadding = listPadding
-        self._isDisabled = State(initialValue: item.isDisabled)
     }
 
     private var buttonWidth: CGFloat {
@@ -91,14 +89,14 @@ private struct ListItem<Item: RtListItem, ItemView: View>: View {
                     .rtSizeReader(size: $contentSize)
             }
             .buttonStyle(RtIsPressedButtonStyle(isPressed: $isPressed))
-            .disabled(isDisabled)
+            .disabled(item.state == .disableAll || item.state == .disableTap)
             .offset(x: offset)
         }
         .frame(maxHeight: itemHeight)
         .opacity(opacity)
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .padding(.bottom, model.items.last?.id == item.id ? 0 : listSpacing)
-        .highPriorityGesture(
+        .highPriorityGesture(item.state == .disableSwipe || item.state == .disableAll ? nil :
             DragGesture(minimumDistance: 8, coordinateSpace: .local)
                 .onChanged { pos in
                     model.idForDelete = item.id
@@ -123,9 +121,6 @@ private struct ListItem<Item: RtListItem, ItemView: View>: View {
         .onDisappear {
             model.idForDelete = nil
             offset = 0
-        }
-        .onChange(of: item.isDisabled) {
-            isDisabled = $0
         }
         .onChange(of: model.idForDelete) {
             guard $0 != item.id else {
@@ -163,10 +158,7 @@ struct RtList_Previews: PreviewProvider {
         let id = UUID().uuidString
         let fullname: String
         let title: String
-        let disabled: Bool
-        var isDisabled: Bool {
-            disabled
-        }
+        let state: RtListItemState
     }
 
     private struct UserListItem: View {
@@ -206,9 +198,10 @@ struct RtList_Previews: PreviewProvider {
     }
 
     static private let model = RtListModel<BankUserInfo, UserListItem>(
-        items: [.init(fullname: "Иванов Никита Романович", title: "Дизайнер", disabled: false),
-                .init(fullname: "Иванов Валера Романович", title: "Дизайнер", disabled: false),
-                .init(fullname: "Иванов Михаил Романович", title: "Дизайнер", disabled: true)],
+        items: [.init(fullname: "Иванов Никита Романович", title: "Дизайнер", state: .normal),
+                .init(fullname: "Иванов Михаил Романович", title: "Дизайнер", state: .disableTap),
+                .init(fullname: "Иванов Валера Романович", title: "Дизайнер", state: .disableSwipe),
+                .init(fullname: "Иванов Александр Романович", title: "Программист", state: .disableAll)],
         contentBuilder: { user, startToDelete, isPressed in UserListItem(user: user, startToDelete: startToDelete, isPressed: isPressed) },
         onSelect: { _ in },
         onDelete: { _ in })

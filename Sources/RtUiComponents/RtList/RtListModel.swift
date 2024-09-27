@@ -8,9 +8,17 @@
 import SwiftUI
 
 
+/// Enum that determines how a user can interact with an item
+public enum RtListItemState {
+    case normal
+    case disableTap
+    case disableSwipe
+    case disableAll
+}
+
 /// Protocol describing the minimum required object to be displayed in the RtList
 public protocol RtListItem: Identifiable {
-    var isDisabled: Bool { get }
+    var state: RtListItemState { get }
 }
 
 /// The model for managing the state of the list
